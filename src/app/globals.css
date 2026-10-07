@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* Tokens. See docs/03-design-system.md. Use these, never a raw hex in a component.
+   `static` because the lobe tints are only read through var() in inline styles,
+   and Tailwind drops theme variables that no utility class uses. */
+@theme static {
+  --color-ground: #1a1b1e;
+  --color-raised: #202126;
+  --color-hairline: #2b2c32;
+  --color-ink: #ecebe6;
+  --color-secondary: #8f929a;
+  --color-muted: #5f626a;
+  --color-signal: #6b78ff;
+
+  --color-lobe-whys: #e0a39f;
+  --color-lobe-stories: #e2c266;
+  --color-lobe-opinions: #8fb0e0;
+  --color-lobe-personality: #c7a9e3;
+  --color-lobe-receipts: #9fcf9b;
+  --color-lobe-engine: #c7ab7d;
+  --color-lobe-headline: #9a9ea8;
+
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: var(--font-figtree), "Figtree", system-ui, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-btn: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-md: 1.1875rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.125rem;
+  --text-4xl: 2.75rem;
+  --text-5xl: 3.5rem;
+}
+
+/* Body text is 17px, but rem stays 16px so spacing tokens mean what they say. */
+html {
+  background: var(--color-ground);
+  color-scheme: dark;
+}
+body {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+}
+
+/* The one ambient animation in the product: the region that has gone quietest breathes. */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.pulse {
+  animation: breathe 4s ease-in-out infinite;
+}
+/* Deep dive. The ring only runs while recording; the second beat arrives once, after the first answer. */
+@keyframes ring-expand {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+.recording-ring {
+  border: 2px solid var(--color-signal);
+  animation: ring-expand 1.6s ease-out infinite;
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.second-beat {
+  animation: slide-in 320ms ease-out;
+}
+
+/* A new capture lands on the map: one dot, once, from the corner to the centre. */
+@keyframes fly-in {
+  from {
+    transform: translate(-40vw, -30vh) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+}
+.fly-in {
+  animation: fly-in 900ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .recording-ring,
+  .second-beat,
+  .fly-in {
+    animation: none;
+  }
+}
+
+/* Lines AI wrote that the person hasn't kept yet. */
+.constructed {
+  border-left: 2px solid var(--color-signal);
+  padding-left: 8px;
+  color: var(--color-secondary);
+}
