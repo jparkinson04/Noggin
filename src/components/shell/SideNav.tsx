@@ -80,14 +80,13 @@ export function SideNav({ initials }: { initials: string }) {
           <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-signal" />
           <span className="hidden sm:inline">Tell me something</span>
         </button>
-        <span className="flex items-center gap-3 lg:px-2">
-          <span
-            aria-label="Your account"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-raised text-xs text-secondary"
-          >
-            {initials}
-          </span>
-        </span>
+        <Link
+          href="/settings"
+          aria-label="Your account and settings"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-raised text-xs text-secondary hover:text-ink lg:ml-2"
+        >
+          {initials}
+        </Link>
       </div>
     </aside>
   );
