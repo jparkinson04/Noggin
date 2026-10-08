@@ -37,6 +37,8 @@ interface BrainActions {
   consumeFlyIns: () => void;
   openSlot: (day: number | null) => void;
   addPost: (post: Post) => void;
+  addEvent: (event: { date: string; title: string }) => void;
+  removeEvent: (date: string, title: string) => void;
   markTopUpAnswered: () => void;
   updateCard: (id: string, patch: Partial<Card>) => void;
   removeCard: (id: string) => void;
@@ -89,6 +91,8 @@ export function BrainProvider({ children }: { children: ReactNode }) {
       },
       consumeFlyIns: () => setFlyIns(0),
       openSlot: (day) => setPendingSlot(day),
+      addEvent: (event) => setBrain((b) => ({ ...b, events: [...b.events, event] })),
+      removeEvent: (date, title) => setBrain((b) => ({ ...b, events: b.events.filter((e) => !(e.date === date && e.title === title)) })),
       addPost: (post) => {
         setBrain((b) => ({ ...b, posts: [post, ...b.posts] }));
         if (pendingSlot !== null) {
