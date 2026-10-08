@@ -19,7 +19,6 @@ const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });
 export const metadata: Metadata = {
   title: "Noggin",
   description: "A personal-brand brain for LinkedIn.",
-  icons: { icon: "/favicon.svg" },
 };
 
 function initials(name: string): string {

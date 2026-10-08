@@ -11,6 +11,8 @@
   --color-secondary: #8f929a;
   --color-muted: #5f626a;
   --color-signal: #6b78ff;
+  /* The wordmark's purple-blue, used for the brain mark only. Not the UI accent. */
+  --color-brand: #4a5bff;
 
   --color-lobe-whys: #e0a39f;
   --color-lobe-stories: #e2c266;
