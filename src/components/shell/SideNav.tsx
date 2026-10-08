@@ -20,6 +20,7 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   studio: <path d="M4 20h16M6 16 16.5 5.5a2 2 0 0 1 2.8 2.8L8.8 18.8 4.5 19.5z" />,
+  calendar: <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 3v4M16 3v4" />,
   insights: <path d="M4 20V11M10 20V5M16 20v-8M22 20H2" />,
 };
 
@@ -27,6 +28,7 @@ const MODULES = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/brain", label: "Brain", icon: "brain" },
   { href: "/studio", label: "Studio", icon: "studio" },
+  { href: "/calendar", label: "Calendar", icon: "calendar" },
   { href: "/insights", label: "Insights", icon: "insights" },
 ];
 
