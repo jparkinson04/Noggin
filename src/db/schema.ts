@@ -12,7 +12,10 @@ import {
   date,
   jsonb,
   pgEnum,
+  index,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const regionKey = pgEnum("region_key", [
   "whys", "stories", "opinions", "personality", "receipts", "engine", "headline",
@@ -28,6 +31,9 @@ export const cardKind = pgEnum("card_kind", [
   "furniture", "signature", "receipt_number", "receipt_quote", "receipt_win",
 ]);
 export const privacy = pgEnum("privacy", ["on_board", "off_board"]);
+export const scheduledPostStatus = pgEnum("scheduled_post_status", [
+  "scheduled", "publishing", "published", "failed", "cancelled",
+]);
 
 export const brains = pgTable("brains", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -153,3 +159,45 @@ export const analyticsSnapshots = pgTable("analytics_snapshots", {
   notes: text("notes"),
   source: text("source").default("manual").notNull(),
 });
+
+/** One LinkedIn account per user. See supabase/migrations/0002_linkedin_publishing.sql for the RLS and column grants. */
+export const linkedinConnections = pgTable("linkedin_connections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().unique(), // auth.users.id
+  linkedinMemberUrn: text("linkedin_member_urn").notNull(),
+  displayName: text("display_name").notNull(),
+  avatarUrl: text("avatar_url"),
+  scopes: text("scopes").array().notNull().default([]),
+  /** Encrypted before it reaches the database; never selected by the browser. */
+  accessTokenEncrypted: text("access_token_encrypted"),
+  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }).notNull(),
+  connectedAt: timestamp("connected_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const scheduledPosts = pgTable(
+  "scheduled_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    studioPostId: uuid("studio_post_id").references(() => posts.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    media: jsonb("media").$type<{ kind: "image"; url: string; alt?: string }[]>().default([]).notNull(),
+    /** Stored in UTC. */
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
+    timezone: text("timezone").default("Europe/London").notNull(),
+    status: scheduledPostStatus("status").default("scheduled").notNull(),
+    linkedinPostUrn: text("linkedin_post_urn"),
+    linkedinPostUrl: text("linkedin_post_url"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    attempts: integer("attempts").default(0).notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("scheduled_posts_due").on(t.status, t.scheduledFor),
+    check("scheduled_posts_body_length", sql`char_length(${t.body}) <= 3000`),
+  ]
+);

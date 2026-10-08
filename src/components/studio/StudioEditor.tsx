@@ -5,6 +5,8 @@ import { BrainMap } from "@/components/brain/BrainMap";
 import { Button } from "@/components/shell/Button";
 import { StageColumn } from "@/components/shell/StageColumn";
 import { useBrain } from "@/components/brain/BrainStore";
+import { PublishControl } from "@/components/linkedin/PublishControl";
+import { StudioTabs } from "@/components/studio/StudioTabs";
 import { shapeFor } from "@/lib/engine/quiz";
 import { cardById, daysSinceLabel, laneUsage, regionHeat, thisWeek } from "@/lib/brain/heat";
 import { detectFunnel, detectLanes, voiceCheck } from "@/lib/brain/detectTopics";
@@ -63,8 +65,9 @@ export function StudioEditor({ cardId }: { cardId?: string }) {
   return (
     <StageColumn
       stage={
-        <div className="flex min-h-full flex-col lg:pt-6">
-          <p className="text-sm text-secondary">
+        <div className="flex min-h-full flex-col lg:pt-2">
+          <StudioTabs />
+          <p className="mt-6 text-sm text-secondary">
             This week{week ? ` · ${week.card.title} · ${cap(OUTCOME_LABELS[week.outcome])}` : ""}
             {shape ? ` · ${cap(shape)}` : ""}
           </p>
@@ -98,6 +101,11 @@ export function StudioEditor({ cardId }: { cardId?: string }) {
               ))}
             </span>
           </footer>
+          {draft.trim() && (
+            // Sign-off: the brain is approved and no constructed lines exist in the draft (there is no
+            // per-post sign-off state yet; see docs/LINKEDIN_PUBLISHING.md).
+            <PublishControl body={draft} studioPostId={null} approved={brain.deepDiveStatus === "approved"} />
+          )}
         </div>
       }
       column={

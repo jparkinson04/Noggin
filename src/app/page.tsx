@@ -8,6 +8,9 @@ import { useBrain } from "@/components/brain/BrainStore";
 import { useCapture } from "@/components/capture/CaptureSheet";
 import { Panel } from "@/components/home/Panel";
 import { ThisWeek } from "@/components/home/ThisWeek";
+import { useLinkedIn } from "@/components/linkedin/LinkedInProvider";
+import { formatWhen } from "@/components/linkedin/when";
+import { firstLine } from "@/lib/linkedin/format";
 import { Button } from "@/components/shell/Button";
 import { MicIcon } from "@/components/shell/MicIcon";
 import { laneUsage, mappedShare, quietAfterDays, regionHeat } from "@/lib/brain/heat";
@@ -66,6 +69,9 @@ function HomePage() {
   const store = useBrain();
   const capture = useCapture();
   const router = useRouter();
+  const li = useLinkedIn();
+  const queued = li.posts.filter((p) => p.status === "scheduled").sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor));
+  const nextPost = queued[0];
   // Dev only: ?demo=empty shows a brain with no posts yet; incomplete | posted as before.
   const demo = useSearchParams().get("demo");
   const brain = useMemo(() => {
@@ -304,6 +310,26 @@ function HomePage() {
             ))}
           </p>
           <p className="mt-4 text-sm">{balance}</p>
+        </Panel>
+
+        <Panel label="Next post" span={6} link={{ href: "/studio/scheduled", text: "Open the queue" }}>
+          {nextPost ? (
+            <>
+              <p className="text-sm text-secondary tabular-nums">{formatWhen(nextPost.scheduledFor)}</p>
+              <p className="mt-1 text-base">{firstLine(nextPost.body)}</p>
+              <p className="mt-3 text-xs text-secondary">
+                {queued.length} queued for LinkedIn
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-secondary">
+              Nothing scheduled for LinkedIn.{" "}
+              <Link href="/studio" className={LINK}>
+                Finish a post in Studio
+              </Link>{" "}
+              and choose Schedule.
+            </p>
+          )}
         </Panel>
 
         {needs.length > 0 && (
