@@ -7,6 +7,8 @@ import { StageColumn } from "@/components/shell/StageColumn";
 import { useBrain } from "@/components/brain/BrainStore";
 import { PublishControl } from "@/components/linkedin/PublishControl";
 import { StudioTabs } from "@/components/studio/StudioTabs";
+import { useSettings } from "@/components/settings/SettingsProvider";
+import { bannedIn } from "@/lib/settings/writingProfile";
 import { shapeFor } from "@/lib/engine/quiz";
 import { cardById, daysSinceLabel, laneUsage, regionHeat, thisWeek } from "@/lib/brain/heat";
 import { detectFunnel, detectLanes, voiceCheck } from "@/lib/brain/detectTopics";
@@ -34,7 +36,9 @@ export function StudioEditor({ cardId }: { cardId?: string }) {
 
   const detected = useMemo(() => detectLanes(brain, draft), [brain, draft]);
   const funnel = useMemo(() => detectFunnel(draft, detected), [draft, detected]);
-  const isms = useMemo(() => voiceCheck(draft), [draft]);
+  const { settings } = useSettings();
+  // LinkedIn clichés plus the phrases this person said they'd never use (and em dashes, if ruled out).
+  const isms = useMemo(() => [...new Set([...voiceCheck(draft), ...bannedIn(draft, settings)])], [draft, settings]);
 
   const litRegions = useMemo(
     () => new Set<RegionKey>(detected.map((d) => d.card.regionKey)),

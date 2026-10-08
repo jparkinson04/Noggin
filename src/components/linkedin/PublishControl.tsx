@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useBrain } from "@/components/brain/BrainStore";
+import { useSettings } from "@/components/settings/SettingsProvider";
+import { nextPostingSlot } from "@/lib/settings/slots";
 import { useLinkedIn } from "@/components/linkedin/LinkedInProvider";
 import { formatDate, fromLocalInput, nextSlot, toLocalInput } from "@/components/linkedin/when";
 import { Button } from "@/components/shell/Button";
@@ -20,8 +22,10 @@ interface Props {
 export function PublishControl({ body, studioPostId, approved, onPublished }: Props) {
   const { brain } = useBrain();
   const li = useLinkedIn();
+  const { settings } = useSettings();
   const [mode, setMode] = useState<"closed" | "schedule">("closed");
-  const [when, setWhen] = useState(() => toLocalInput(nextSlot()));
+  // Starts from the person's next default posting slot, or the next whole hour if they have none.
+  const [when, setWhen] = useState(() => toLocalInput(nextPostingSlot(settings.postingSlots) ?? nextSlot()));
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -98,7 +102,14 @@ export function PublishControl({ body, studioPostId, approved, onPublished }: Pr
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button variant="primary" disabled={!canSend} onClick={() => run(() => li.publishNow({ body, studioPostId, approved }), "Posted to LinkedIn.")}>
+        <Button
+          variant="primary"
+          disabled={!canSend}
+          onClick={() => {
+            if (settings.confirmBeforePublish && !window.confirm("Post this to LinkedIn now?")) return;
+            run(() => li.publishNow({ body, studioPostId, approved }), "Posted to LinkedIn.");
+          }}
+        >
           {busy ? "Posting…" : "Post now"}
         </Button>
         <Button disabled={!approved || !connected || over} aria-expanded={mode === "schedule"} onClick={() => setMode(mode === "schedule" ? "closed" : "schedule")}>
