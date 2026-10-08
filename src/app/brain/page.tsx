@@ -6,8 +6,8 @@ import { BrainTabs } from "@/components/brain/BrainTabs";
 import { useBrain } from "@/components/brain/BrainStore";
 import { RegionColumn } from "@/components/brain/RegionColumn";
 import { StageColumn } from "@/components/shell/StageColumn";
-import { laneUsage, mappedShare, regionHeat } from "@/lib/brain/heat";
-import { REGION_KEYS, type RegionKey } from "@/lib/brain/schema";
+import { cardCounts, laneUsage, mappedShare, regionHeat } from "@/lib/brain/heat";
+import type { RegionKey } from "@/lib/brain/schema";
 
 export default function BrainHome() {
   const { brain, flyIns, consumeFlyIns } = useBrain();
@@ -26,17 +26,8 @@ export default function BrainHome() {
   const usage = useMemo(() => laneUsage(brain), [brain]);
   const heat = useMemo(() => regionHeat(brain, usage), [brain, usage]);
   const mapped = Math.round(mappedShare(brain) * 100);
-  // One anchor dot per approved card.
-  const anchors = useMemo(
-    () =>
-      Object.fromEntries(
-        REGION_KEYS.map((key) => [
-          key,
-          brain.cards.filter((c) => c.regionKey === key && c.approvedAt && c.privacy === "on_board").length,
-        ])
-      ) as Record<RegionKey, number>,
-    [brain]
-  );
+  // One anchor dot per card on the board; the cloud grows with the count.
+  const anchors = useMemo(() => cardCounts(brain), [brain]);
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 

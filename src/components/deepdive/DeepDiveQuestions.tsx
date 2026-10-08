@@ -29,15 +29,19 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
         questionsInSitting(question.sitting!).length
       }`;
 
-  // Only the regions with an answer so far light up.
-  const heat = useMemo(() => {
-    const touched = new Set(
-      Object.entries(responses)
-        .filter(([, r]) => r.answer)
-        .map(([qid]) => QUESTIONS.find((q) => q.id === qid)?.region)
-    );
-    return Object.fromEntries(REGION_KEYS.map((k) => [k, touched.has(k) ? 1 : 0])) as Record<RegionKey, number>;
+  // Only the regions with an answer so far light up, and each answer grows its region a little.
+  const answered = useMemo(() => {
+    const counts = Object.fromEntries(REGION_KEYS.map((k) => [k, 0])) as Record<RegionKey, number>;
+    for (const [qid, r] of Object.entries(responses)) {
+      const region = QUESTIONS.find((q) => q.id === qid)?.region;
+      if (r.answer && region) counts[region]++;
+    }
+    return counts;
   }, [responses]);
+  const heat = useMemo(
+    () => Object.fromEntries(REGION_KEYS.map((k) => [k, answered[k] > 0 ? 1 : 0])) as Record<RegionKey, number>,
+    [answered]
+  );
 
   const prev = index > 0 ? DEEP_DIVE_QUESTIONS[index - 1] : null;
   const next = index >= 0 && index < DEEP_DIVE_QUESTIONS.length - 1 ? DEEP_DIVE_QUESTIONS[index + 1] : null;
@@ -108,7 +112,7 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
       </div>
 
       <figure className="mx-auto mt-16 w-[180px] max-w-[760px] md:fixed md:bottom-8 md:left-8 md:mt-0">
-        <BrainMap heat={heat} compact onlyWarm />
+        <BrainMap heat={heat} anchors={answered} compact onlyWarm />
         <figcaption className="mt-2 text-xs text-secondary">Your brain, so far</figcaption>
       </figure>
     </div>

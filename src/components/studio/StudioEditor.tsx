@@ -10,7 +10,7 @@ import { StudioTabs } from "@/components/studio/StudioTabs";
 import { useSettings } from "@/components/settings/SettingsProvider";
 import { bannedIn } from "@/lib/settings/writingProfile";
 import { shapeFor } from "@/lib/engine/quiz";
-import { cardById, daysSinceLabel, laneUsage, regionHeat, thisWeek } from "@/lib/brain/heat";
+import { cardById, cardCounts, daysSinceLabel, laneUsage, regionHeat, thisWeek } from "@/lib/brain/heat";
 import { detectFunnel, detectLanes, voiceCheck } from "@/lib/brain/detectTopics";
 import { OUTCOME_LABELS, type Post, type RegionKey } from "@/lib/brain/schema";
 
@@ -114,7 +114,7 @@ export function StudioEditor({ cardId }: { cardId?: string }) {
       }
       column={
         <div>
-          <BrainMap heat={heat} highlight={litRegions} compact className="max-w-[320px]" />
+          <BrainMap heat={heat} anchors={cardCounts(brain)} highlight={litRegions} compact className="max-w-[320px]" />
 
           <h2 className="mt-8 text-base">Draws from</h2>
           {detected.length === 0 ? (

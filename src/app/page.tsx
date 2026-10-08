@@ -14,7 +14,7 @@ import { formatWhen } from "@/components/linkedin/when";
 import { firstLine } from "@/lib/linkedin/format";
 import { Button } from "@/components/shell/Button";
 import { MicIcon } from "@/components/shell/MicIcon";
-import { laneUsage, mappedShare, quietAfterDays, regionHeat } from "@/lib/brain/heat";
+import { cardCounts, laneUsage, mappedShare, quietAfterDays, regionHeat } from "@/lib/brain/heat";
 import { TOP_UP_QUESTIONS } from "@/lib/brain/questions";
 import { OUTCOME_LABELS, REGION_LABELS, type FunnelLevel } from "@/lib/brain/schema";
 import { actualMix30d, capturesThisMonth, daysSinceLastPost, longestRunWeeks, postsLastFourWeeks, regionsQuiet } from "@/lib/brain/stats";
@@ -245,7 +245,7 @@ function HomePage() {
         <Panel label="Your brain" span={4} link={{ href: "/brain", text: "Open the brain" }}>
           <div className="flex items-center gap-5">
             <div className="w-[170px] shrink-0">
-              <BrainMap heat={heat} compact />
+              <BrainMap heat={heat} anchors={cardCounts(brain)} compact />
             </div>
             <div className="space-y-2 text-sm">
               <p>

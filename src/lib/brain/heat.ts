@@ -106,6 +106,14 @@ export function cardById(brain: Brain, id: string): Card | undefined {
   return brain.cards.find((c) => c.id === id);
 }
 
+/** Cards on the board per region. The map grows a region's cloud by this. */
+export function cardCounts(brain: Brain): Record<RegionKey, number> {
+  const keys: RegionKey[] = ["whys", "stories", "opinions", "personality", "receipts", "engine", "headline"];
+  return Object.fromEntries(
+    keys.map((key) => [key, brain.cards.filter((c) => c.regionKey === key && c.privacy === "on_board").length])
+  ) as Record<RegionKey, number>;
+}
+
 /** Share of regions with at least one approved card. "62% mapped" on Home and the Brain stage. */
 export function mappedShare(brain: Brain): number {
   const keys: RegionKey[] = ["whys", "stories", "opinions", "personality", "receipts", "engine", "headline"];
