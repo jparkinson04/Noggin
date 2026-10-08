@@ -46,6 +46,11 @@ export const brains = pgTable("brains", {
   mixMiddle: integer("mix_middle").default(40),
   mixBottom: integer("mix_bottom").default(10),
   cadencePerWeek: integer("cadence_per_week").default(3),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  jobTitle: text("job_title"),
+  company: text("company"),
+  avatarUrl: text("avatar_url"),
   headline: text("headline"),
   headlineOptions: jsonb("headline_options").$type<string[]>().default([]),
   deepDiveStatus: deepDiveStatus("deep_dive_status").default("not_started").notNull(),
@@ -201,3 +206,31 @@ export const scheduledPosts = pgTable(
     check("scheduled_posts_body_length", sql`char_length(${t.body}) <= 3000`),
   ]
 );
+
+export const spelling = pgEnum("spelling", ["uk", "us"]);
+export const emojiLevel = pgEnum("emoji_level", ["none", "sparingly", "happy"]);
+export const hashtagLevel = pgEnum("hashtag_level", ["none", "up_to_3"]);
+export const postLength = pgEnum("post_length", ["short", "medium", "long"]);
+export const anonymiseOthers = pgEnum("anonymise_others", ["always", "ask"]);
+
+/** One row per user, created by a trigger on sign-up. See supabase/migrations/0003_user_settings.sql. */
+export const userSettings = pgTable("user_settings", {
+  userId: uuid("user_id").primaryKey(), // auth.users.id
+  timezone: text("timezone").default("Europe/London").notNull(),
+  spelling: spelling("spelling").default("uk").notNull(),
+  bannedPhrases: text("banned_phrases").array().default([]).notNull(),
+  noEmDashes: boolean("no_em_dashes").default(false).notNull(),
+  signaturePhrases: text("signature_phrases").array().default([]).notNull(),
+  emojiLevel: emojiLevel("emoji_level").default("none").notNull(),
+  hashtagLevel: hashtagLevel("hashtag_level").default("none").notNull(),
+  defaultPostLength: postLength("default_post_length").default("medium").notNull(),
+  sharing: jsonb("sharing").$type<Record<string, "share" | "ask" | "never">>().notNull(),
+  anonymiseOthers: anonymiseOthers("anonymise_others").default("ask").notNull(),
+  postingSlots: jsonb("posting_slots").$type<{ day: number; time: string }[]>().default([]).notNull(),
+  weeklyPostGoal: integer("weekly_post_goal").default(3).notNull(),
+  confirmBeforePublish: boolean("confirm_before_publish").default(true).notNull(),
+  notifications: jsonb("notifications").$type<Record<string, { email: boolean; inApp: boolean } | number>>().notNull(),
+  keepVoiceRecordings: boolean("keep_voice_recordings").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

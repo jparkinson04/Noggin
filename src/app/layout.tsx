@@ -5,6 +5,7 @@ import { CaptureProvider } from "@/components/capture/CaptureSheet";
 import { BrainProvider } from "@/components/brain/BrainStore";
 import { LinkedInProvider } from "@/components/linkedin/LinkedInProvider";
 import { ExpiryBanner } from "@/components/linkedin/ExpiryBanner";
+import { SettingsProvider } from "@/components/settings/SettingsProvider";
 import { sampleBrain } from "@/lib/brain/sampleBrain";
 import "./globals.css";
 
@@ -37,11 +38,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BrainProvider>
           <CaptureProvider>
             <LinkedInProvider>
-              <SideNav initials={initials(sampleBrain.ownerName)} />
-              <div className="min-w-0 flex-1">
-                <ExpiryBanner />
-                <main>{children}</main>
-              </div>
+              <SettingsProvider>
+                <SideNav initials={initials(sampleBrain.ownerName)} />
+                <div className="min-w-0 flex-1">
+                  <ExpiryBanner />
+                  <main>{children}</main>
+                </div>
+              </SettingsProvider>
             </LinkedInProvider>
           </CaptureProvider>
         </BrainProvider>

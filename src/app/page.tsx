@@ -9,6 +9,7 @@ import { useCapture } from "@/components/capture/CaptureSheet";
 import { Panel } from "@/components/home/Panel";
 import { ThisWeek } from "@/components/home/ThisWeek";
 import { useLinkedIn } from "@/components/linkedin/LinkedInProvider";
+import { useSettings } from "@/components/settings/SettingsProvider";
 import { formatWhen } from "@/components/linkedin/when";
 import { firstLine } from "@/lib/linkedin/format";
 import { Button } from "@/components/shell/Button";
@@ -74,11 +75,14 @@ function HomePage() {
   const nextPost = queued[0];
   // Dev only: ?demo=empty shows a brain with no posts yet; incomplete | posted as before.
   const demo = useSearchParams().get("demo");
+  const { settings } = useSettings();
   const brain = useMemo(() => {
-    if (demo === "empty") return { ...store.brain, posts: [] };
-    if (demo === "incomplete") return { ...store.brain, deepDiveStatus: "in_progress" as const, sittingsDone: 1 };
-    return store.brain;
-  }, [store.brain, demo]);
+    // The posting goal in Settings is the target Home measures against.
+    const base = { ...store.brain, cadencePerWeek: settings.weeklyPostGoal || store.brain.cadencePerWeek };
+    if (demo === "empty") return { ...base, posts: [] };
+    if (demo === "incomplete") return { ...base, deepDiveStatus: "in_progress" as const, sittingsDone: 1 };
+    return base;
+  }, [store.brain, demo, settings.weeklyPostGoal]);
   const postedSlots = useMemo(() => (demo === "posted" ? { 2: "demo" } : demo ? {} : store.postedSlots), [demo, store.postedSlots]);
   const dumps = demo === "empty" ? [] : store.dumps;
 
