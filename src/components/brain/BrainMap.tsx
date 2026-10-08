@@ -17,7 +17,10 @@ const MAP_REGIONS: MapRegion[] = ["whys", "stories", "opinions", "personality", 
 
 export interface BrainMapProps {
   heat: Record<RegionKey, number>;
-  /** Approved cards per region: each becomes an anchor dot near the region's centre. */
+  /**
+   * Cards per region. Each becomes an anchor dot near the centre, and the cloud grows with the
+   * count: the more the person has put in a region, the more of its field lights up.
+   */
   anchors?: Partial<Record<RegionKey, number>>;
   selected?: RegionKey | null;
   onSelect?: (key: RegionKey) => void;
@@ -188,9 +191,15 @@ function anchorSpots(key: MapRegion, count: number): [number, number][] {
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
-/** The lit share of a region's dots: a quarter at zero heat, all of them at full. */
-const litCount = (key: MapRegion, heat: number) =>
-  Math.round(FIELD[key].length * (0.25 + 0.75 * clamp01(heat)));
+/**
+ * How much of a region's field is lit. With a card count, the cloud grows by content: a small
+ * seed with nothing, about a fifth with one card, full at eight or more. Without one, heat
+ * alone decides (a quarter at zero, all of it at full).
+ */
+const litCount = (key: MapRegion, heat: number, cards?: number) =>
+  Math.round(
+    FIELD[key].length * (cards === undefined ? 0.25 + 0.75 * clamp01(heat) : Math.min(1, 0.1 + 0.11 * cards))
+  );
 
 interface MovingDot {
   el: SVGCircleElement;
@@ -223,9 +232,9 @@ export function BrainMap({
   const lit = useMemo(
     () =>
       Object.fromEntries(
-        MAP_REGIONS.map((key) => [key, onlyWarm && !(heat[key] > 0) ? 0 : litCount(key, heat[key] ?? 0)])
+        MAP_REGIONS.map((key) => [key, onlyWarm && !(heat[key] > 0) ? 0 : litCount(key, heat[key] ?? 0, anchors?.[key])])
       ) as Record<MapRegion, number>,
-    [heat, onlyWarm]
+    [heat, onlyWarm, anchors]
   );
   const litKey = MAP_REGIONS.map((k) => `${lit[k]}:${anchors?.[k] ?? 0}`).join(",");
 
