@@ -175,8 +175,8 @@ Shared themes, coverage view, team plans. Only once Solo has paying strangers wh
 
 ## 7. Business model
 
-- **Solo, around £19/month.** One brain: deep dive, brain, studio, insights, top-ups. Founding rate for former Expert Voice clients, who are the first cohort.
-- **Team, around £129/month.** Up to five brains under one business with shared themes and the coverage view. Each person keeps their own brain. Built at Stage 6.
+- **Solo, £29/month, or £24/month billed annually.** One brain: deep dive, brain, studio, insights, top-ups. £19/month is the founding rate, locked for life, for the waitlist and former Expert Voice clients: a launch lever, not the list price.
+- **Team, £19 per seat per month, three-seat minimum (so from £57), £16/seat annually.** Shared themes and the coverage view; each person keeps their own brain. Built at Stage 6. An Agency or Business tier comes later, once a few teams are paying, rather than guessing at a number now.
 - **Guided, later.** Solo plus a monthly review call with a real coach. The productised version of the current done-with-you service; a margin line, not the main product.
 
 Positioning: the methodology of a done-for-you personal branding service at a fraction of the cost, with human authorship preserved. Marketing leads with the refusal: other tools generate content; this one helps you discover what you actually have to say. Secondary message, for the founder buyer: a personal brand is business strategy, and the person is the only part competitors can't copy.
