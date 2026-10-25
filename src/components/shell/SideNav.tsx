@@ -109,9 +109,11 @@ export function SideNav({ initials }: { initials: string }) {
               <Link href="/settings/linkedin" role="menuitem" className="block px-3 py-2 text-sm text-secondary hover:text-ink" onClick={() => setMenu(false)}>
                 LinkedIn
               </Link>
-              <button type="button" role="menuitem" className="block w-full px-3 py-2 text-left text-sm text-secondary hover:text-ink" onClick={() => setMenu(false)}>
-                Sign out
-              </button>
+              <form action="/auth/sign-out" method="post">
+                <button type="submit" role="menuitem" className="block w-full px-3 py-2 text-left text-sm text-secondary hover:text-ink">
+                  Sign out
+                </button>
+              </form>
             </div>
           )}
         </div>

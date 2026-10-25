@@ -6,7 +6,7 @@ import { BrainProvider } from "@/components/brain/BrainStore";
 import { LinkedInProvider } from "@/components/linkedin/LinkedInProvider";
 import { ExpiryBanner } from "@/components/linkedin/ExpiryBanner";
 import { SettingsProvider } from "@/components/settings/SettingsProvider";
-import { sampleBrain } from "@/lib/brain/sampleBrain";
+import { signedInUser } from "@/lib/auth/currentUser";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -30,7 +30,17 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await signedInUser();
+  // Signed out, the only page anyone can reach is sign-in: no rail, and nothing that loads their data.
+  if (!user) {
+    return (
+      <html lang="en-GB" className={`${bricolage.variable} ${figtree.variable}`}>
+        <body className="min-h-screen">{children}</body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en-GB" className={`${bricolage.variable} ${figtree.variable}`}>
       <body className="min-h-screen lg:flex">
@@ -38,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CaptureProvider>
             <LinkedInProvider>
               <SettingsProvider>
-                <SideNav initials={initials(sampleBrain.ownerName)} />
+                <SideNav initials={initials(user.name)} />
                 <div className="min-w-0 flex-1">
                   <ExpiryBanner />
                   <main>{children}</main>
