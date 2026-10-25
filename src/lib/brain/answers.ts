@@ -1,12 +1,16 @@
 /**
- * Deep-dive answers, held in memory for now. Phase 2 swaps the voice blob for an upload
- * and the placeholder transcript for a real one.
+ * Deep-dive answers. With Supabase they save as they're given (see useSavedResponses);
+ * the placeholder transcript still waits for a real one.
  */
 
 export interface VoiceClip {
-  /** Object URL for the recorded blob, for playback. */
+  /** For playback: an object URL while it's fresh, a signed Storage link once it has been saved. */
   url: string;
   seconds: number;
+  /** The recording itself, until it's uploaded. */
+  blob?: Blob;
+  /** Where it lives in the voice-notes bucket, once it's there. */
+  path?: string;
 }
 
 export interface Answer {

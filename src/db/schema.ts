@@ -1,6 +1,9 @@
 /**
  * Drizzle schema. Mirrors docs/02-data-model.md. Phase 2.
- * Run `npm run db:generate` after changes; keep 0001_init.sql as the canonical first migration.
+ * The hand-written SQL in supabase/migrations is the source of truth, applied with `npm run db:migrate`;
+ * keep this file in step with it. drizzle-kit has no snapshot of those files, so `db:generate` would
+ * write a duplicate first migration, and `db:push` would drop what isn't declared here (the auth.users
+ * foreign keys, for one).
  */
 import {
   pgTable,
@@ -14,6 +17,7 @@ import {
   pgEnum,
   index,
   check,
+  unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -37,7 +41,7 @@ export const scheduledPostStatus = pgEnum("scheduled_post_status", [
 
 export const brains = pgTable("brains", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id").notNull(), // auth.users.id
+  ownerId: uuid("owner_id").notNull().unique("brains_one_per_owner"), // auth.users.id
   ownerName: text("owner_name").notNull(),
   goal: goal("goal"),
   enginePrimary: engine("engine_primary"),
@@ -59,8 +63,11 @@ export const brains = pgTable("brains", {
 
 export const questions = pgTable("questions", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** The id in src/lib/brain/questions.ts. `npm run db:questions` keeps the rows in step with it. */
+  key: text("key").unique("questions_key_unique"),
   version: integer("version").default(1).notNull(),
-  part: integer("part").notNull(),
+  /** The sitting. Empty for top-ups. */
+  part: integer("part"),
   position: integer("position").notNull(),
   text: text("text").notNull(),
   listeningFor: text("listening_for"),
@@ -69,18 +76,26 @@ export const questions = pgTable("questions", {
   region: regionKey("region").notNull(),
 });
 
-export const answers = pgTable("answers", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  brainId: uuid("brain_id").references(() => brains.id, { onDelete: "cascade" }).notNull(),
-  questionId: uuid("question_id").references(() => questions.id).notNull(),
-  medium: medium("medium").notNull(),
-  audioUrl: text("audio_url"),
-  transcript: text("transcript"),
-  typedText: text("typed_text"),
-  followUpQuestion: text("follow_up_question"),
-  followUpAnswer: text("follow_up_answer"),
-  recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const answers = pgTable(
+  "answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    brainId: uuid("brain_id").references(() => brains.id, { onDelete: "cascade" }).notNull(),
+    questionId: uuid("question_id").references(() => questions.id).notNull(),
+    medium: medium("medium").notNull(),
+    audioUrl: text("audio_url"),
+    /** Voice notes in the order they were recorded, in the voice-notes bucket. */
+    clips: jsonb("clips").$type<{ path: string; seconds: number }[]>().default([]).notNull(),
+    transcript: text("transcript"),
+    typedText: text("typed_text"),
+    /** The second beat: the prompt once it's been answered or skipped, then what they said. */
+    followUpQuestion: text("follow_up_question"),
+    followUpAnswer: text("follow_up_answer"),
+    followUpClips: jsonb("follow_up_clips").$type<{ path: string; seconds: number }[]>().default([]).notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique("answers_one_per_question").on(t.brainId, t.questionId)]
+);
 
 export const cards = pgTable("cards", {
   id: uuid("id").primaryKey().defaultRandom(),

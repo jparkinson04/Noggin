@@ -19,15 +19,17 @@ Fixed set of seven, seeded per brain. Not user-creatable.
 - `key`: `whys | stories | opinions | personality | receipts | engine | headline`
 
 ### question
-The deep-dive question bank. Global, versioned, not per brain.
-- `part` (1–5), `order`, `text`, `listening_for` (shown to the person as "why we ask"), `follow_up_hint`, `safety_line` (nullable)
+The deep-dive question bank. Global, versioned, not per brain. Edited in `src/lib/brain/questions.ts`; `npm run db:questions` copies it here.
+- `key`: the id in `questions.ts` (`s1_2`, `top_3`)
+- `part` (the sitting; empty for top-ups), `order`, `text`, `listening_for` (shown to the person as "why we ask"), `follow_up_hint`, `safety_line` (nullable)
 
 ### answer
-One per question per brain. May have several takes.
+One per question per brain. Saving again replaces it; a voice answer can have several takes.
 - `question_id`, `brain_id`
 - `medium`: `voice | text | file | photo`
-- `audio_url` (Supabase Storage), `transcript`, `typed_text`
-- `follow_up_question` (AI-generated, nullable), `follow_up_answer`
+- `clips`: the voice notes in order, each `{ path, seconds }` in the private `voice-notes` bucket at `<user id>/<question key>/<file>`
+- `audio_url` (unused for now), `transcript`, `typed_text`
+- `follow_up_question` (the second-beat prompt once it's answered or skipped; AI-chosen later), `follow_up_answer`, `follow_up_clips`. A prompt with nothing said means skipped.
 - `recorded_at`
 
 ### card

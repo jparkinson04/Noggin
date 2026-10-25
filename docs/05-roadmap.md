@@ -19,10 +19,11 @@ Done when: you'd happily show it to a client and say "this is your brain".
 
 ## Phase 2 — Real brains (Supabase, auth, voice)
 
-- [ ] Supabase project, run `0001_init.sql`, Drizzle client
-- [ ] Email magic-link auth
-- [ ] Deep dive flow: one question per screen, drip schedule, record / type / upload
-- [ ] Voice recording in the browser (MediaRecorder), upload to Storage
+- [x] Supabase project, migrations applied with `npm run db:migrate`
+- [ ] Drizzle client
+- [x] Email magic-link auth
+- [ ] Deep dive flow: one question per screen, drip schedule, record / type / upload (answers save as they're given and the dive picks up where it left off; the drip schedule and file upload are still to do)
+- [x] Voice recording in the browser (MediaRecorder), upload to Storage
 - [ ] Transcription route (Whisper or Deepgram)
 - [ ] AI follow-up job (one per question, skippable)
 - [ ] AI extract job → proposed cards, engine diagnosis, headline options

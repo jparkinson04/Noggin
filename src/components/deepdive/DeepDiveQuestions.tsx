@@ -6,18 +6,26 @@ import { useRouter } from "next/navigation";
 import { BrainMap } from "@/components/brain/BrainMap";
 import { useBrain } from "@/components/brain/BrainStore";
 import { QuestionScreen } from "@/components/deepdive/QuestionScreen";
+import { useSavedResponses } from "@/components/deepdive/useSavedResponses";
 import { Button } from "@/components/shell/Button";
 import { NO_RESPONSE, type QuestionResponse } from "@/lib/brain/answers";
 import { DEEP_DIVE_QUESTIONS, QUESTIONS, SITTINGS, questionsInSitting } from "@/lib/brain/questions";
 import { REGION_KEYS, type RegionKey } from "@/lib/brain/schema";
 
+interface Props {
+  startAt: string;
+  /** What they've said in earlier visits. */
+  saved: Record<string, QuestionResponse>;
+  userId: string;
+}
+
 /** The deep dive: a blank room, one question at a time. Also hosts a weekly top-up question. */
-export function DeepDiveQuestions({ startAt }: { startAt: string }) {
-  // Local state only for now: answers live in memory and go when the page reloads.
+export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
+  // Each answer saves as it's given. Without Supabase they live in memory and go when the page reloads.
   const router = useRouter();
   const { assemble, markTopUpAnswered } = useBrain();
   const [id, setId] = useState(startAt);
-  const [responses, setResponses] = useState<Record<string, QuestionResponse>>({});
+  const { responses, change, failed, retry } = useSavedResponses(saved, userId);
 
   const question = QUESTIONS.find((q) => q.id === id) ?? DEEP_DIVE_QUESTIONS[0];
   const index = DEEP_DIVE_QUESTIONS.indexOf(question);
@@ -58,8 +66,20 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
           question={question}
           progress={progress}
           response={response}
-          onChange={(nextResponse) => setResponses((all) => ({ ...all, [question.id]: nextResponse }))}
+          onChange={(nextResponse) => change(question.id, nextResponse)}
         />
+        {failed.has(question.id) && (
+          <p role="alert" className="mt-8 text-sm">
+            Couldn&apos;t save this answer. It&apos;s still here.{" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-ink"
+              onClick={() => retry(question.id)}
+            >
+              Try again
+            </button>
+          </p>
+        )}
         <div className="mt-12 flex items-center gap-5">
           {question.topUp ? (
             response.answer && (
