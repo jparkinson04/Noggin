@@ -18,6 +18,7 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
   const [responses, setResponses] = useState(initial);
   /** Questions whose last save didn't go through. */
   const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
+  const failing = useRef(new Set<string>());
   const queues = useRef(new Map<string, Promise<void>>());
   /** Object URL → Storage path, so a note is only uploaded once however many saves include it. */
   const uploads = useRef(new Map<string, Promise<string>>());
@@ -81,19 +82,21 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
       const run = (queues.current.get(questionId) ?? Promise.resolve())
         .then(() => save(questionId, response))
         .then(
-          () =>
-            setFailed((f) => {
-              const next = new Set(f);
-              next.delete(questionId);
-              return next;
-            }),
-          () => setFailed((f) => new Set(f).add(questionId))
+          () => failing.current.delete(questionId),
+          () => failing.current.add(questionId)
         )
+        .then(() => setFailed(new Set(failing.current)))
         .finally(() => inFlight.current--);
       queues.current.set(questionId, run);
     },
     [save]
   );
+
+  /** Waits for every save in flight. False if any question's last save didn't go through. */
+  const flush = useCallback(async () => {
+    await Promise.all(queues.current.values());
+    return failing.current.size === 0;
+  }, []);
 
   const retry = useCallback(
     (questionId: string) => {
@@ -103,5 +106,5 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
     [responses, change]
   );
 
-  return { responses, change, failed, retry };
+  return { responses, change, failed, retry, flush };
 }

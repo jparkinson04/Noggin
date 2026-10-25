@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrainMap } from "@/components/brain/BrainMap";
 import { useBrain } from "@/components/brain/BrainStore";
@@ -10,7 +10,7 @@ import { useSavedResponses } from "@/components/deepdive/useSavedResponses";
 import { Button } from "@/components/shell/Button";
 import { NO_RESPONSE, type QuestionResponse } from "@/lib/brain/answers";
 import { DEEP_DIVE_QUESTIONS, QUESTIONS, SITTINGS, questionsInSitting } from "@/lib/brain/questions";
-import { REGION_KEYS, type RegionKey } from "@/lib/brain/schema";
+import { REGION_KEYS, type RegionKey, type SourceAnswer } from "@/lib/brain/schema";
 
 interface Props {
   startAt: string;
@@ -23,9 +23,34 @@ interface Props {
 export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
   // Each answer saves as it's given. Without Supabase they live in memory and go when the page reloads.
   const router = useRouter();
-  const { assemble, markTopUpAnswered } = useBrain();
+  const { assemble, markTopUpAnswered, noteProgress } = useBrain();
   const [id, setId] = useState(startAt);
-  const { responses, change, failed, retry } = useSavedResponses(saved, userId);
+  const { responses, change, failed, retry, flush } = useSavedResponses(saved, userId);
+  const [building, setBuilding] = useState(false);
+  const [buildFailed, setBuildFailed] = useState(false);
+
+  useEffect(() => noteProgress(Object.keys(responses).filter((qid) => responses[qid].answer)), [responses, noteProgress]);
+
+  async function buildBoard() {
+    setBuilding(true);
+    setBuildFailed(false);
+    // Every typed answer becomes a source; voice-only answers wait for transcription.
+    const date = new Date().toISOString().slice(0, 10);
+    const sources: SourceAnswer[] = DEEP_DIVE_QUESTIONS.flatMap((q) => {
+      const r = responses[q.id];
+      if (!r?.answer) return [];
+      const beat = r.secondBeat && r.secondBeat !== "skipped" ? r.secondBeat.text : "";
+      const text = [r.answer.text, beat].filter(Boolean).join(" ");
+      return text ? [{ id: `a_${q.id}`, questionId: q.id, text, date }] : [];
+    });
+    // The board is built from what's saved, so every answer has to land first.
+    if ((await flush()) && (await assemble(sources))) {
+      router.push("/brain/board");
+      return;
+    }
+    setBuilding(false);
+    setBuildFailed(true);
+  }
 
   const question = QUESTIONS.find((q) => q.id === id) ?? DEEP_DIVE_QUESTIONS[0];
   const index = DEEP_DIVE_QUESTIONS.indexOf(question);
@@ -68,6 +93,11 @@ export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
           response={response}
           onChange={(nextResponse) => change(question.id, nextResponse)}
         />
+        {buildFailed && (
+          <p role="alert" className="mt-8 text-sm">
+            Couldn&apos;t build your board just now. Everything you&apos;ve said is still here, so try again in a moment.
+          </p>
+        )}
         {failed.has(question.id) && (
           <p role="alert" className="mt-8 text-sm">
             Couldn&apos;t save this answer. It&apos;s still here.{" "}
@@ -98,25 +128,8 @@ export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
               Next question
             </Button>
           ) : (
-            <Button
-              variant="primary"
-              disabled={!response.answer}
-              onClick={() => {
-                // Every typed answer becomes a source; voice-only answers wait for transcription.
-                const date = new Date().toISOString().slice(0, 10);
-                assemble(
-                  DEEP_DIVE_QUESTIONS.flatMap((q) => {
-                    const r = responses[q.id];
-                    if (!r?.answer) return [];
-                    const beat = r.secondBeat && r.secondBeat !== "skipped" ? r.secondBeat.text : "";
-                    const text = [r.answer.text, beat].filter(Boolean).join(" ");
-                    return text ? [{ id: `a_${q.id}`, questionId: q.id, text, date }] : [];
-                  })
-                );
-                router.push("/brain/board");
-              }}
-            >
-              Build my board
+            <Button variant="primary" disabled={!response.answer || building} onClick={buildBoard}>
+              {building ? "Building your board" : "Build my board"}
             </Button>
           )}
           {prev && (

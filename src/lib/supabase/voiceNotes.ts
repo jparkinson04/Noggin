@@ -1,3 +1,4 @@
+import { newId } from "@/lib/newId";
 import { createClient } from "./browser";
 import { VOICE_BUCKET } from "./config";
 
@@ -15,7 +16,7 @@ const EXTENSIONS: Record<string, string> = {
  */
 export async function uploadVoiceNote(userId: string, questionId: string, blob: Blob): Promise<string> {
   const type = blob.type.split(";")[0] || "audio/webm";
-  const path = `${userId}/${questionId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${EXTENSIONS[type] ?? "webm"}`;
+  const path = `${userId}/${questionId}/${Date.now()}-${newId().slice(0, 8)}.${EXTENSIONS[type] ?? "webm"}`;
   const { error } = await createClient().storage.from(VOICE_BUCKET).upload(path, blob, { contentType: type });
   if (error) throw new Error(error.message);
   return path;

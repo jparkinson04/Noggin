@@ -20,6 +20,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { Engine, QuizResult } from "@/lib/brain/schema";
 
 export const regionKey = pgEnum("region_key", [
   "whys", "stories", "opinions", "personality", "receipts", "engine", "headline",
@@ -57,6 +58,10 @@ export const brains = pgTable("brains", {
   avatarUrl: text("avatar_url"),
   headline: text("headline"),
   headlineOptions: jsonb("headline_options").$type<string[]>().default([]),
+  /** The engine quiz's result, whole. */
+  quiz: jsonb("quiz").$type<QuizResult>(),
+  /** The engine they chose on the Board over what their answers showed. */
+  engineOverride: jsonb("engine_override").$type<{ primary: Engine; secondary?: Engine; at: string }>(),
   deepDiveStatus: deepDiveStatus("deep_dive_status").default("not_started").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Answer, QuestionResponse } from "./answers";
 import type { Question } from "./questions";
 import { allClips, fromColumns, toColumns, type AnswerColumns, type SavedAnswer, type SavedResponse } from "./savedAnswers";
+import { brainFor, findBrainId } from "./store";
 
 /**
  * Deep-dive answers in Supabase, read and written as the signed-in person, so row level security
@@ -17,27 +18,6 @@ type Row = AnswerColumns & { questions: { key: string } | null };
 
 /** Question ids by key. Rows keep their ids when `npm run db:questions` updates them. */
 const questionIds = new Map<string, string>();
-
-async function findBrain(userId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("brains").select("id").eq("owner_id", userId).maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as { id: string } | null)?.id ?? null;
-}
-
-/** Made on the first save. The name stays empty until the profile has one. */
-async function brainFor(user: CurrentUser): Promise<string> {
-  const existing = await findBrain(user.id);
-  if (existing) return existing;
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("brains")
-    .upsert({ owner_id: user.id, owner_name: "" }, { onConflict: "owner_id", ignoreDuplicates: true });
-  if (error) throw new Error(error.message);
-  const made = await findBrain(user.id);
-  if (!made) throw new Error("Couldn't make a brain.");
-  return made;
-}
 
 async function questionId(key: string): Promise<string> {
   const known = questionIds.get(key);
@@ -53,7 +33,7 @@ async function questionId(key: string): Promise<string> {
 
 /** Everything they've said so far, keyed by question id, ready for the deep-dive screen. */
 export async function loadResponses(userId: string): Promise<Record<string, QuestionResponse>> {
-  const brainId = await findBrain(userId);
+  const brainId = await findBrainId(userId);
   if (!brainId) return {};
   const supabase = await createClient();
   const { data, error } = await supabase

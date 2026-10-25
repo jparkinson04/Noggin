@@ -27,7 +27,7 @@ Done when: you'd happily show it to a client and say "this is your brain".
 - [ ] Transcription route (Whisper or Deepgram)
 - [ ] AI follow-up job (one per question, skippable)
 - [ ] AI extract job → proposed cards, engine diagnosis, headline options
-- [ ] Walkthrough screen: approve / edit / delete cards, confirm engine, mix, cadence, pick headline
+- [x] Walkthrough screen: approve / edit / delete cards, confirm engine, mix, cadence, pick headline (the Board; every edit, the build and the approval save; cards are still one per answer until the extract job exists)
 - [ ] Studio unlock gate on `approved`
 - [ ] AI draft-help actions with constructed-line marking
 - [ ] Brain dumps, photo bank, calendar (simple CRUD)

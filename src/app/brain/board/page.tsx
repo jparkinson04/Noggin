@@ -35,7 +35,9 @@ function provenance(card: Card, source?: SourceAnswer): string {
 /** The brain as an editorial page. The only place constructed text gets approved. */
 export default function Board() {
   const { brain, updateCard, removeCard, addCard, setHeadline, setEngineOverride, setSituation, approve } = useBrain();
-  const unapproved = brain.deepDiveStatus !== "approved";
+  // The board is built from the deep dive, so there's nothing to approve until it has been.
+  const readyToApprove = brain.deepDiveStatus === "assembled";
+  const stillDiving = brain.deepDiveStatus === "not_started" || brain.deepDiveStatus === "in_progress";
   const constructedCount = brain.cards.filter((c) => c.constructed).length;
   const countFor = (region: RegionKey) => brain.cards.filter((c) => c.regionKey === region).length;
   const sourceOf = (id?: string) => brain.answers.find((a) => a.id === id);
@@ -70,10 +72,15 @@ export default function Board() {
           <p className="text-xs text-secondary">
             {constructedCount === 0 ? "Everything here is in your words." : `${constructedCount} card${constructedCount === 1 ? "" : "s"} still constructed`}
           </p>
-          {unapproved && (
+          {readyToApprove && (
             <Button variant="primary" className="mt-4 w-full" onClick={approve}>
               Approve my board
             </Button>
+          )}
+          {stillDiving && (
+            <ButtonLink variant="primary" href="/deep-dive" className="mt-4 w-full">
+              {brain.deepDiveStatus === "not_started" ? "Start the deep dive" : "Carry on with the deep dive"}
+            </ButtonLink>
           )}
         </div>
       </aside>
@@ -112,11 +119,14 @@ export default function Board() {
             onLeadWith={(engine) => setEngineOverride(engine, secondaryFor(engine, brain.observed?.blend ?? brain.quiz?.blend))}
           />
           {brain.engineOverride && <p className="mt-4 text-xs text-secondary">Your choice, {brain.engineOverride.at}.</p>}
-          <div className="mt-8 max-w-[68ch] space-y-4">
-            {ENGINE_COPY[brain.enginePrimary].map((para) => (
-              <p key={para}>{para}</p>
-            ))}
-          </div>
+          {/* Until the quiz or the deep dive has said something, there's no engine to describe. */}
+          {(brain.observed || brain.quiz || brain.engineOverride) && (
+            <div className="mt-8 max-w-[68ch] space-y-4">
+              {ENGINE_COPY[brain.enginePrimary].map((para) => (
+                <p key={para}>{para}</p>
+              ))}
+            </div>
+          )}
         </Section>
 
         <Section id="week" title="Your week" tint="var(--color-signal)" blurb="What each posting day should serve, dealt from your mix and your blend.">
@@ -229,7 +239,11 @@ function HeadlineSection({
           </div>
         ) : (
           <div className="flex items-start justify-between gap-6">
-            <p className="display text-[1.375rem] leading-snug">{headline}</p>
+            {headline ? (
+              <p className="display text-[1.375rem] leading-snug">{headline}</p>
+            ) : (
+              <p className="text-secondary">Written last, from everything on your board.</p>
+            )}
             <Button size="small" onClick={() => { setDraft(headline); setEditing(true); }}>
               Edit
             </Button>

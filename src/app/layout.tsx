@@ -7,6 +7,7 @@ import { LinkedInProvider } from "@/components/linkedin/LinkedInProvider";
 import { ExpiryBanner } from "@/components/linkedin/ExpiryBanner";
 import { SettingsProvider } from "@/components/settings/SettingsProvider";
 import { signedInUser } from "@/lib/auth/currentUser";
+import { loadBrain } from "@/lib/brain/store";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -41,10 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     );
   }
 
+  const brain = await loadBrain(user);
   return (
     <html lang="en-GB" className={`${bricolage.variable} ${figtree.variable}`}>
       <body className="min-h-screen lg:flex">
-        <BrainProvider>
+        <BrainProvider initial={brain}>
           <CaptureProvider>
             <LinkedInProvider>
               <SettingsProvider>

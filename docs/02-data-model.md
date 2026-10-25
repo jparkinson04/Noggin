@@ -5,14 +5,16 @@ The brain is the root. Everything hangs off it. Types in `src/lib/brain/schema.t
 ## Entities
 
 ### brain
-One per person (later: one per person per business).
+One per person (later: one per person per business). Made the first time they arrive; until the quiz or the deep dive says otherwise, the app reads an empty goal and engine as growing an audience and storyteller.
 - `id`, `owner_id`
 - `goal`: `growing_audience | established_selling | full_with_clients | launching`
 - `engine_primary`, `engine_secondary`: `storyteller | teacher | commentator | documenter`
+- `engine_override`: `{ primary, secondary, at }` when they chose the engine on the Board over what their answers showed
+- `quiz`: the engine quiz's result, whole (blend, situation, mix, cadence, flag, `takenAt`)
 - `mix_top`, `mix_middle`, `mix_bottom` (ints, sum to 100)
 - `cadence_per_week`
 - `headline` (the one line), `headline_options` (the three proposed)
-- `deep_dive_status`: `not_started | in_progress | assembled | approved`
+- `deep_dive_status`: `not_started | in_progress | assembled | approved`. Sittings done is worked out from the answers, not stored.
 
 ### region
 Fixed set of seven, seeded per brain. Not user-creatable.
