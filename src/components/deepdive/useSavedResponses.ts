@@ -22,6 +22,8 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
   const queues = useRef(new Map<string, Promise<void>>());
   /** Object URL → Storage path, so a note is only uploaded once however many saves include it. */
   const uploads = useRef(new Map<string, Promise<string>>());
+  /** The same, once each upload has landed, for matching transcripts back to notes on screen. */
+  const paths = useRef(new Map<string, string>());
   const inFlight = useRef(0);
 
   // Closing the tab mid-upload would lose the voice note, so the browser asks first.
@@ -40,7 +42,10 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
       if (!upload) {
         if (!clip.blob) return Promise.reject(new Error("The recording is no longer here."));
         upload = uploadVoiceNote(userId, questionId, clip.blob);
-        upload.catch(() => uploads.current.delete(clip.url)); // so trying again uploads again
+        upload.then(
+          (path) => paths.current.set(clip.url, path),
+          () => uploads.current.delete(clip.url) // so trying again uploads again
+        );
         uploads.current.set(clip.url, upload);
       }
       return upload;
@@ -51,10 +56,34 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
   const saved = useCallback(
     async (questionId: string, answer: Answer): Promise<SavedAnswer> => ({
       text: answer.text,
-      clips: await Promise.all(answer.clips.map(async (c) => ({ path: await pathFor(questionId, c), seconds: c.seconds }))),
+      clips: await Promise.all(
+        answer.clips.map(async (c) => ({
+          path: await pathFor(questionId, c),
+          seconds: c.seconds,
+          ...(c.transcript ? { transcript: c.transcript } : {}),
+        }))
+      ),
     }),
     [pathFor]
   );
+
+  /** Transcripts that came back from a save, put onto the voice notes on screen. */
+  const learn = useCallback((questionId: string, transcripts: Record<string, string>) => {
+    const fill = (answer: Answer): Answer => ({
+      ...answer,
+      clips: answer.clips.map((c) => {
+        const path = c.path ?? paths.current.get(c.url);
+        const transcript = path ? transcripts[path] : undefined;
+        return path && transcript && transcript !== c.transcript ? { ...c, path, transcript } : c;
+      }),
+    });
+    setResponses((all) => {
+      const r = all[questionId];
+      if (!r?.answer) return all;
+      const beat = r.secondBeat;
+      return { ...all, [questionId]: { ...r, answer: fill(r.answer), secondBeat: beat && beat !== "skipped" ? fill(beat) : beat } };
+    });
+  }, []);
 
   const save = useCallback(
     async (questionId: string, response: QuestionResponse) => {
@@ -70,8 +99,10 @@ export function useSavedResponses(initial: Record<string, QuestionResponse>, use
         body: JSON.stringify(body),
       });
       if (!r.ok) throw new Error(`Save failed with ${r.status}`);
+      const { transcripts } = (await r.json()) as { transcripts?: Record<string, string> };
+      if (transcripts && Object.keys(transcripts).length) learn(questionId, transcripts);
     },
-    [saved]
+    [saved, learn]
   );
 
   const change = useCallback(

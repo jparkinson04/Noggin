@@ -7,11 +7,12 @@ import { actualMix30d, daysSinceLastPost, longestRunWeeks, postsLastFourWeeks, r
 
 const now = new Date("2026-10-25T12:00:00");
 const ids = (sitting: 1 | 2 | 3) => questionsInSitting(sitting).map((q) => q.id);
-const answer = (key: string, typed: string | null, beat: string | null = null): AnswerRow => ({
+const answer = (key: string, typed: string | null, beat: string | null = null, spoken: string[] = []): AnswerRow => ({
   id: `00000000-0000-4000-8000-${key.replace("_", "").padStart(12, "0")}`,
   typed_text: typed,
   follow_up_answer: beat,
-  clips: [],
+  clips: spoken.map((transcript, i) => ({ path: `u/${key}/${i}.webm`, seconds: 30, transcript })),
+  follow_up_clips: [],
   recorded_at: "2026-10-24T09:30:00+00:00",
   questions: { key },
 });
@@ -62,6 +63,15 @@ test("answers become sources in the order they're asked, typed words and second 
       ["s1_2", "Bay four. I said nothing.", "2026-10-24"],
       ["s2_1", "Burnout is a design outcome.", "2026-10-24"],
     ]
+  );
+});
+
+test("voice notes count once they're transcribed, and not before", () => {
+  const voice = answer("s1_3", null, null, ["I joined the wrong Zoom call.", "I stayed."]);
+  const untranscribed: AnswerRow = { ...answer("s1_4", null), clips: [{ path: "u/s1_4/0.webm", seconds: 40 }] };
+  assert.deepEqual(
+    sourceAnswers([voice, untranscribed]).map((s) => [s.questionId, s.text]),
+    [["s1_3", "I joined the wrong Zoom call. I stayed."]]
   );
 });
 

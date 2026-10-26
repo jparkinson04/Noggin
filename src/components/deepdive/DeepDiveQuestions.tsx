@@ -8,7 +8,7 @@ import { useBrain } from "@/components/brain/BrainStore";
 import { QuestionScreen } from "@/components/deepdive/QuestionScreen";
 import { useSavedResponses } from "@/components/deepdive/useSavedResponses";
 import { Button } from "@/components/shell/Button";
-import { NO_RESPONSE, type QuestionResponse } from "@/lib/brain/answers";
+import { NO_RESPONSE, answerWords, type QuestionResponse } from "@/lib/brain/answers";
 import { DEEP_DIVE_QUESTIONS, QUESTIONS, SITTINGS, questionsInSitting } from "@/lib/brain/questions";
 import { REGION_KEYS, type RegionKey, type SourceAnswer } from "@/lib/brain/schema";
 
@@ -34,13 +34,14 @@ export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
   async function buildBoard() {
     setBuilding(true);
     setBuildFailed(false);
-    // Every typed answer becomes a source; voice-only answers wait for transcription.
+    // Every answer with words in it becomes a source: typed, or voice once it's transcribed.
+    // With Supabase the server rebuilds these from what's saved; this is for the sample brain.
     const date = new Date().toISOString().slice(0, 10);
     const sources: SourceAnswer[] = DEEP_DIVE_QUESTIONS.flatMap((q) => {
       const r = responses[q.id];
       if (!r?.answer) return [];
-      const beat = r.secondBeat && r.secondBeat !== "skipped" ? r.secondBeat.text : "";
-      const text = [r.answer.text, beat].filter(Boolean).join(" ");
+      const beat = r.secondBeat && r.secondBeat !== "skipped" ? answerWords(r.secondBeat) : "";
+      const text = [answerWords(r.answer), beat].filter(Boolean).join(" ");
       return text ? [{ id: `a_${q.id}`, questionId: q.id, text, date }] : [];
     });
     // The board is built from what's saved, so every answer has to land first.
@@ -93,6 +94,11 @@ export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
           response={response}
           onChange={(nextResponse) => change(question.id, nextResponse)}
         />
+        {building && (
+          <p className="mt-8 text-sm text-secondary">
+            Picking out your stories, opinions and proof, in your words. This takes a minute or two.
+          </p>
+        )}
         {buildFailed && (
           <p role="alert" className="mt-8 text-sm">
             Couldn&apos;t build your board just now. Everything you&apos;ve said is still here, so try again in a moment.
@@ -129,7 +135,7 @@ export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
             </Button>
           ) : (
             <Button variant="primary" disabled={!response.answer || building} onClick={buildBoard}>
-              {building ? "Building your board" : "Build my board"}
+              {building ? "Reading your answers" : "Build my board"}
             </Button>
           )}
           {prev && (

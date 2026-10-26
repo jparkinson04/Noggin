@@ -1,5 +1,6 @@
 import { observeEngine } from "../engine/observe";
 import { QUESTIONS, SITTINGS, questionsInSitting } from "./questions";
+import type { SavedClip } from "./savedAnswers";
 import type { Brain, Card, CardKind, Engine, Goal, Mix, QuizResult, RegionKey, SourceAnswer } from "./schema";
 
 /**
@@ -54,12 +55,20 @@ export interface AnswerRow {
   id: string;
   typed_text: string | null;
   follow_up_answer: string | null;
-  clips: unknown[];
+  clips: SavedClip[];
+  follow_up_clips: SavedClip[];
   recorded_at: string;
   questions: { key: string } | null;
 }
 
-export const ANSWER_COLUMNS = "id, typed_text, follow_up_answer, clips, recorded_at, questions(key)";
+export const ANSWER_COLUMNS = "id, typed_text, follow_up_answer, clips, follow_up_clips, recorded_at, questions(key)";
+
+/** The voice notes' transcripts, in order. */
+const said = (clips: SavedClip[]) =>
+  clips
+    .map((c) => c.transcript?.trim())
+    .filter(Boolean)
+    .join(" ");
 
 // Until the person takes the quiz or picks one, the Board needs something to stand on. These match
 // the database's defaults for mix and cadence.
@@ -79,13 +88,14 @@ export function sittingsDone(answeredQuestionIds: Iterable<string>): number {
 
 /**
  * Each answer with words in it, in the order the questions are asked, as a source cards can point
- * back to. Voice-only answers wait for transcripts.
+ * back to: what they typed and what their voice notes say, then the same for the second beat.
+ * A voice note without a transcript yet adds nothing.
  */
 export function sourceAnswers(rows: AnswerRow[]): SourceAnswer[] {
   const order = (questionId: string) => QUESTIONS.findIndex((q) => q.id === questionId);
   return rows
     .flatMap((row) => {
-      const text = [row.typed_text, row.follow_up_answer].filter(Boolean).join(" ");
+      const text = [row.typed_text, said(row.clips), row.follow_up_answer, said(row.follow_up_clips)].filter(Boolean).join(" ");
       return row.questions && text ? [{ id: row.id, questionId: row.questions.key, text, date: row.recorded_at.slice(0, 10) }] : [];
     })
     .sort((a, b) => order(a.questionId) - order(b.questionId));

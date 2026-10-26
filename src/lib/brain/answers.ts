@@ -1,6 +1,6 @@
 /**
- * Deep-dive answers. With Supabase they save as they're given (see useSavedResponses);
- * the placeholder transcript still waits for a real one.
+ * Deep-dive answers. With Supabase they save as they're given (see useSavedResponses), and with an
+ * OpenAI key each voice note comes back transcribed.
  */
 
 export interface VoiceClip {
@@ -11,6 +11,8 @@ export interface VoiceClip {
   blob?: Blob;
   /** Where it lives in the voice-notes bucket, once it's there. */
   path?: string;
+  /** What they said, once it's transcribed. */
+  transcript?: string;
 }
 
 export interface Answer {
@@ -34,6 +36,14 @@ export const NO_RESPONSE: QuestionResponse = { nudge: "not_shown" };
 
 const THIN_VOICE_SECONDS = 40;
 const THIN_TYPED_WORDS = 60;
+
+/** Everything they said in an answer: what they typed, then their voice notes as transcribed so far. */
+export function answerWords(answer: Answer): string {
+  return [answer.text, ...answer.clips.map((c) => c.transcript ?? "")]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");
+}
 
 export function wordCount(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).length : 0;

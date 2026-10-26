@@ -3,10 +3,15 @@ import type { CurrentUser } from "@/lib/auth/currentUser";
 import { observeEngine } from "@/lib/engine/observe";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+import { EXTRACT_MODEL, aiConfigured, extractBoard } from "@/lib/ai/extract";
+import { logAiCall } from "@/lib/ai/log";
+import { headlinesFrom, toProposedCards } from "@/lib/ai/proposedCards";
+import { backfillTranscripts } from "./answerStore";
 import { assemble } from "./assemble";
+import { brainFor } from "./brainId";
 import { DEEP_DIVE_QUESTIONS } from "./questions";
 import { sampleBrain } from "./sampleBrain";
-import type { Brain, Card } from "./schema";
+import type { Brain, Card, SourceAnswer } from "./schema";
 import {
   ANSWER_COLUMNS,
   BRAIN_COLUMNS,
@@ -26,27 +31,6 @@ import {
  * browser holds as before; with it, the signed-in person's own, through row level security.
  * Server only.
  */
-
-export async function findBrainId(userId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("brains").select("id").eq("owner_id", userId).maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as { id: string } | null)?.id ?? null;
-}
-
-/** Their brain's id, made the first time it's needed. The name stays empty until the profile has one. */
-export async function brainFor(user: CurrentUser): Promise<string> {
-  const existing = await findBrainId(user.id);
-  if (existing) return existing;
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("brains")
-    .upsert({ owner_id: user.id, owner_name: "" }, { onConflict: "owner_id", ignoreDuplicates: true });
-  if (error) throw new Error(error.message);
-  const made = await findBrainId(user.id);
-  if (!made) throw new Error("Couldn't make a brain.");
-  return made;
-}
 
 /** The person's brain, cards and deep-dive answers included. */
 export async function loadBrain(user: CurrentUser): Promise<Brain> {
@@ -92,11 +76,19 @@ export async function deleteCard(user: CurrentUser, cardId: string): Promise<voi
   if (error) throw new Error(error.message);
 }
 
-/** Builds the board from their saved deep-dive answers, replacing every card, and returns the new brain. */
+/**
+ * Builds the board from their saved deep-dive answers, replacing every card, and returns the new
+ * brain. The engine and status come from the rules in assemble(); the cards and headline options
+ * from Claude when ANTHROPIC_API_KEY is set, or one card per answer when it isn't (or Claude fails).
+ */
 export async function assembleBrain(user: CurrentUser): Promise<Brain> {
+  // Voice notes saved before their transcript came back are written out first, so every word counts.
+  await backfillTranscripts(await brainFor(user));
   const brain = await loadBrain(user);
   const deepDive = new Set(DEEP_DIVE_QUESTIONS.map((q) => q.id));
-  const next = assemble(brain, brain.answers.filter((a) => deepDive.has(a.questionId)), () => randomUUID());
+  const answers = brain.answers.filter((a) => deepDive.has(a.questionId));
+  let next = assemble(brain, answers, () => randomUUID());
+  if (aiConfigured() && answers.length) next = await withClaudesBoard(next, answers);
 
   const supabase = await createClient();
   const cleared = await supabase.from("cards").delete().eq("brain_id", brain.id);
@@ -116,10 +108,41 @@ export async function assembleBrain(user: CurrentUser): Promise<Brain> {
   }
   const { error } = await supabase
     .from("brains")
-    .update({ deep_dive_status: "assembled", engine_primary: next.enginePrimary, engine_secondary: next.engineSecondary ?? null })
+    .update({
+      deep_dive_status: "assembled",
+      engine_primary: next.enginePrimary,
+      engine_secondary: next.engineSecondary ?? null,
+      headline_options: next.headlineOptions,
+    })
     .eq("id", brain.id);
   if (error) throw new Error(error.message);
   return next;
+}
+
+/** Claude's proposed cards and headlines in place of one card per answer. Logged either way. */
+async function withClaudesBoard(board: Brain, answers: SourceAnswer[]): Promise<Brain> {
+  const inputIds = answers.map((a) => a.id);
+  try {
+    const { output, model, usage } = await extractBoard(answers);
+    const cards = toProposedCards(output, answers, () => randomUUID());
+    const headlines = headlinesFrom(output);
+    await logAiCall({
+      brainId: board.id,
+      job: "extract",
+      model,
+      inputIds,
+      outputIds: cards.map((c) => c.id),
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+    });
+    if (!cards.length) return board;
+    return { ...board, cards, headlineOptions: headlines.length ? headlines : board.headlineOptions };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("extract failed, keeping one card per answer:", message);
+    await logAiCall({ brainId: board.id, job: "extract", model: EXTRACT_MODEL, inputIds, outputIds: [], error: message });
+    return board;
+  }
 }
 
 /** The walkthrough's last step: every card on the board becomes theirs. */

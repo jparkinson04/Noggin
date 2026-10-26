@@ -29,8 +29,8 @@ The deep-dive question bank. Global, versioned, not per brain. Edited in `src/li
 One per question per brain. Saving again replaces it; a voice answer can have several takes.
 - `question_id`, `brain_id`
 - `medium`: `voice | text | file | photo`
-- `clips`: the voice notes in order, each `{ path, seconds }` in the private `voice-notes` bucket at `<user id>/<question key>/<file>`
-- `audio_url` (unused for now), `transcript`, `typed_text`
+- `clips`: the voice notes in order, each `{ path, seconds, transcript }` in the private `voice-notes` bucket at `<user id>/<question key>/<file>`. The transcript arrives when the answer saves (or when the board is built, for any that missed it)
+- `audio_url` (unused for now), `transcript` (the answer's voice notes, joined), `typed_text`
 - `follow_up_question` (the second-beat prompt once it's answered or skipped; AI-chosen later), `follow_up_answer`, `follow_up_clips`. A prompt with nothing said means skipped.
 - `recorded_at`
 
@@ -73,6 +73,12 @@ Computed by `src/lib/brain/heat.ts`. Thresholds scale with cadence: at 3 posts/w
 - `author_id` (founder/admin now, members later), `title`, `body`, `kind`: `tip | algorithm | trend | example`, `published_at`
 
 ### feed_comment (phase 3)
+
+### ai_call
+Every AI call, per `docs/04-ai-rules.md`: how we find out which prompts need work.
+- `brain_id`, `job`: `extract | follow_up | draft_help`, `model`
+- `input_ids` (the answers or cards it read), `output_ids` (the cards it proposed), `input_tokens`, `output_tokens`, `error`
+- `outcome`: `kept | edited | discarded`, filled in later
 
 ### analytics_snapshot
 - `brain_id`, `period_start`, `period_end`, `impressions`, `engagements`, `followers`, `profile_views`, `notes` (achievements), `source`: `linkedin_export | manual`

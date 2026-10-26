@@ -3,6 +3,9 @@ import { currentUser } from "@/lib/auth/currentUser";
 import { assembleBrain } from "@/lib/brain/store";
 import { supabaseConfigured } from "@/lib/supabase/config";
 
+// Transcribing any stragglers and Claude reading the whole deep dive can take a minute or two.
+export const maxDuration = 300;
+
 /**
  * POST: "Build my board". Turns their saved deep-dive answers into proposed cards, replacing any
  * already there, and returns the brain as it now stands.

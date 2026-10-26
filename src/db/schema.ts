@@ -185,6 +185,21 @@ export const analyticsSnapshots = pgTable("analytics_snapshots", {
   source: text("source").default("manual").notNull(),
 });
 
+/** Every AI call, for finding out which prompts need work. See docs/04-ai-rules.md. */
+export const aiCalls = pgTable("ai_calls", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  brainId: uuid("brain_id").references(() => brains.id, { onDelete: "cascade" }).notNull(),
+  job: text("job").notNull(), // extract | follow_up | draft_help
+  model: text("model").notNull(),
+  inputIds: jsonb("input_ids").$type<string[]>().default([]).notNull(),
+  outputIds: jsonb("output_ids").$type<string[]>().default([]).notNull(),
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  outcome: text("outcome"), // kept | edited | discarded
+  error: text("error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 /** One LinkedIn account per user. See supabase/migrations/0002_linkedin_publishing.sql for the RLS and column grants. */
 export const linkedinConnections = pgTable("linkedin_connections", {
   id: uuid("id").primaryKey().defaultRandom(),
