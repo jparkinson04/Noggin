@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Wordmark } from "@/components/shell/Wordmark";
 import { Button } from "@/components/shell/Button";
 import { INPUT } from "@/components/settings/Field";
 
@@ -37,7 +38,7 @@ export function SignInForm({ next, problem }: { next: string; problem: string | 
   return (
     <div className="min-h-screen px-4 pt-16 pb-16 md:px-6 md:pt-24">
       <div className="mx-auto w-full max-w-[440px]">
-        <img src="/logo-dark.svg" alt="Noggin" className="h-[26px] w-auto" />
+        <Wordmark height={26} />
 
         {sentTo ? (
           <section className="mt-14">
