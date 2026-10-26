@@ -7,6 +7,7 @@ import { useBrain } from "@/components/brain/BrainStore";
 import { EngineResult } from "@/components/engine/EngineResult";
 import { ButtonLink } from "@/components/shell/Button";
 import { Narrow } from "@/components/shell/Narrow";
+import { Wordmark } from "@/components/shell/Wordmark";
 import { QUIZ, scoreQuiz, type QuizAnswers } from "@/lib/engine/quiz";
 
 /**
@@ -58,7 +59,7 @@ export function EngineQuiz({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="relative min-h-screen px-4 pb-24 pt-16 md:px-6 md:pt-24">
       <Link href="/" aria-label="Noggin home" className="absolute right-4 top-5 md:right-8 md:top-6">
-        <img src="/logo-dark.svg" alt="" className="h-[18px] w-auto" />
+        <Wordmark height={18} />
       </Link>
       <div className="mx-auto w-full max-w-[760px]">
         <p className="text-sm text-secondary">

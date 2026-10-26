@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useCapture } from "@/components/capture/CaptureSheet";
+import { Wordmark } from "@/components/shell/Wordmark";
 import { useEffect, useRef, useState } from "react";
 
 /** Small line icons, drawn in the current colour, one per module. */
@@ -59,7 +60,7 @@ export function SideNav({ initials }: { initials: string }) {
   return (
     <aside className="flex shrink-0 items-center gap-4 border-b border-hairline px-4 py-3 lg:sticky lg:top-0 lg:h-screen lg:w-[220px] lg:flex-col lg:items-stretch lg:gap-0 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
       <Link href="/" aria-label="Noggin home" className="shrink-0 lg:mb-10 lg:px-2">
-        <img src="/logo-dark.svg" alt="" className="h-[26px] w-auto" />
+        <Wordmark height={26} />
       </Link>
 
       <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Modules">

@@ -7,6 +7,7 @@ import { BrainMap } from "@/components/brain/BrainMap";
 import { useBrain } from "@/components/brain/BrainStore";
 import { QuestionScreen } from "@/components/deepdive/QuestionScreen";
 import { Button } from "@/components/shell/Button";
+import { Wordmark } from "@/components/shell/Wordmark";
 import { NO_RESPONSE, type QuestionResponse } from "@/lib/brain/answers";
 import { DEEP_DIVE_QUESTIONS, QUESTIONS, SITTINGS, questionsInSitting } from "@/lib/brain/questions";
 import { REGION_KEYS, type RegionKey } from "@/lib/brain/schema";
@@ -49,7 +50,7 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
   return (
     <div className="relative min-h-screen px-4 pb-40 pt-16 md:px-6 md:pt-24">
       <Link href="/" aria-label="Noggin home" className="absolute right-4 top-5 md:right-8 md:top-6">
-        <img src="/logo-dark.svg" alt="" className="h-[18px] w-auto" />
+        <Wordmark height={18} />
       </Link>
 
       <div className="mx-auto w-full max-w-[760px]">
