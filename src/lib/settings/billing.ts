@@ -17,7 +17,8 @@ export async function getBillingSummary(_userId: string): Promise<BillingSummary
   return {
     plan: "solo",
     planName: "Solo",
-    pricePence: 1900,
+    // List price. Founding members (waitlist, former Expert Voice clients) are on £19, locked for life.
+    pricePence: 2900,
     interval: "month",
     renewsOn: "2026-11-02",
     cardLast4: null,
