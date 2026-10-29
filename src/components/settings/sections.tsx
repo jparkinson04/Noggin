@@ -13,6 +13,7 @@ import { TagInput } from "@/components/shell/TagInput";
 import { Toggle } from "@/components/shell/Toggle";
 import { getBillingSummary, type BillingSummary } from "@/lib/settings/billing";
 import { SHARING_TOPICS, SUGGESTED_BANNED, type NotificationKey, type PostingSlot, type SharingChoice } from "@/lib/settings/types";
+import { THEME_COOKIE, themeFrom, type Theme } from "@/lib/theme";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const LINK = "text-sm text-secondary underline underline-offset-2 hover:text-ink";
@@ -140,6 +141,29 @@ export function ProfileSection() {
             <option key={z} value={z} />
           ))}
         </datalist>
+      </Field>
+    </div>
+  );
+}
+
+/* ---------- Appearance ---------- */
+
+const YEAR = 60 * 60 * 24 * 365;
+
+/** Light or dark. Changes the page at once and is remembered on this device. */
+export function AppearanceSection() {
+  const [theme, setTheme] = useState<Theme>(() =>
+    typeof document === "undefined" ? "dark" : themeFrom(document.documentElement.dataset.theme)
+  );
+  const choose = (next: Theme) => {
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=${YEAR}; samesite=lax`;
+  };
+  return (
+    <div>
+      <Field label="Theme" help="Remembered on this device.">
+        <Segmented label="Theme" value={theme} onChange={choose} options={[{ value: "dark", label: "Dark" }, { value: "light", label: "Light" }]} />
       </Field>
     </div>
   );

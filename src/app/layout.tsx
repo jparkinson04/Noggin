@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { SideNav } from "@/components/shell/SideNav";
 import { CaptureProvider } from "@/components/capture/CaptureSheet";
@@ -8,6 +9,7 @@ import { ExpiryBanner } from "@/components/linkedin/ExpiryBanner";
 import { SettingsProvider } from "@/components/settings/SettingsProvider";
 import { signedInUser } from "@/lib/auth/currentUser";
 import { loadBrain } from "@/lib/brain/store";
+import { THEME_COOKIE, themeFrom } from "@/lib/theme";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -33,10 +35,11 @@ function initials(name: string): string {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await signedInUser();
+  const theme = themeFrom((await cookies()).get(THEME_COOKIE)?.value);
   // Signed out, the only page anyone can reach is sign-in: no rail, and nothing that loads their data.
   if (!user) {
     return (
-      <html lang="en-GB" className={`${bricolage.variable} ${figtree.variable}`}>
+      <html lang="en-GB" data-theme={theme} className={`${bricolage.variable} ${figtree.variable}`}>
         <body className="min-h-screen">{children}</body>
       </html>
     );
@@ -44,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const brain = await loadBrain(user);
   return (
-    <html lang="en-GB" className={`${bricolage.variable} ${figtree.variable}`}>
+    <html lang="en-GB" data-theme={theme} className={`${bricolage.variable} ${figtree.variable}`}>
       <body className="min-h-screen lg:flex">
         <BrainProvider initial={brain}>
           <CaptureProvider>

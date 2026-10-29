@@ -31,6 +31,7 @@ Done when: you'd happily show it to a client and say "this is your brain".
 - [ ] Studio unlock gate on `approved`
 - [ ] AI draft-help actions with constructed-line marking
 - [ ] Brain dumps, photo bank, calendar (simple CRUD)
+- [x] Light theme, chosen in Settings → Appearance (dark stays the default)
 
 Done when: you've migrated one real client's brain board into it and used it for a month.
 
