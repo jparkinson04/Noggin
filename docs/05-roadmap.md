@@ -39,6 +39,7 @@ Done when: you've migrated one real client's brain board into it and used it for
 
 - [ ] Weekly digest email: posted, gone quiet, one unused card
 - [ ] Analytics: LinkedIn export upload, charts, lane usage over time, one-page report export
+- [x] Audience audit in Insights: the person says who they want to reach and why, uploads screenshots of who reacted to their recent posts (or pastes the list), and sees how many are the people they want, who is worth a conversation, and what to change. Nothing is fetched from LinkedIn and the screenshots are not kept. Still to do: asking for the ideal client during the deep dive, reading reactions post by post so each lane can be judged, and numbers from LinkedIn once analytics access is approved
 - [ ] Feed intelligence: admin posts tips; members read
 - [ ] Stripe subscriptions: Solo / Guided
 - [ ] Onboarding emails for the deep dive drip
@@ -50,6 +51,7 @@ Done when: strangers pay and come back.
 - [ ] Comments on feed items
 - [ ] Member-submitted tips with moderation
 - [ ] Public "show your brain" profile (trimmed, opt-in)
+- [ ] Workspaces: one sign-in can hold several brains, so a social media manager can run their clients and a business can run its people. Needs the LinkedIn connection, scheduled posts and settings moved from the sign-in to the brain
 - [ ] Team brains under one business, combined analytics
 - [ ] Event-aware nudges ("event in 9 days, no post yet")
 
