@@ -1,24 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrainMap } from "@/components/brain/BrainMap";
 import { useBrain } from "@/components/brain/BrainStore";
 import { QuestionScreen } from "@/components/deepdive/QuestionScreen";
+import { useSavedResponses } from "@/components/deepdive/useSavedResponses";
 import { Button } from "@/components/shell/Button";
 import { Wordmark } from "@/components/shell/Wordmark";
-import { NO_RESPONSE, type QuestionResponse } from "@/lib/brain/answers";
+import { NO_RESPONSE, answerWords, type QuestionResponse } from "@/lib/brain/answers";
 import { DEEP_DIVE_QUESTIONS, QUESTIONS, SITTINGS, questionsInSitting } from "@/lib/brain/questions";
-import { REGION_KEYS, type RegionKey } from "@/lib/brain/schema";
+import { REGION_KEYS, type RegionKey, type SourceAnswer } from "@/lib/brain/schema";
+
+interface Props {
+  startAt: string;
+  /** What they've said in earlier visits. */
+  saved: Record<string, QuestionResponse>;
+  userId: string;
+}
 
 /** The deep dive: a blank room, one question at a time. Also hosts a weekly top-up question. */
-export function DeepDiveQuestions({ startAt }: { startAt: string }) {
-  // Local state only for now: answers live in memory and go when the page reloads.
+export function DeepDiveQuestions({ startAt, saved, userId }: Props) {
+  // Each answer saves as it's given. Without Supabase they live in memory and go when the page reloads.
   const router = useRouter();
-  const { assemble, markTopUpAnswered } = useBrain();
+  const { assemble, markTopUpAnswered, noteProgress } = useBrain();
   const [id, setId] = useState(startAt);
-  const [responses, setResponses] = useState<Record<string, QuestionResponse>>({});
+  const { responses, change, failed, retry, flush } = useSavedResponses(saved, userId);
+  const [building, setBuilding] = useState(false);
+  const [buildFailed, setBuildFailed] = useState(false);
+
+  useEffect(() => noteProgress(Object.keys(responses).filter((qid) => responses[qid].answer)), [responses, noteProgress]);
+
+  async function buildBoard() {
+    setBuilding(true);
+    setBuildFailed(false);
+    // Every answer with words in it becomes a source: typed, or voice once it's transcribed.
+    // With Supabase the server rebuilds these from what's saved; this is for the sample brain.
+    const date = new Date().toISOString().slice(0, 10);
+    const sources: SourceAnswer[] = DEEP_DIVE_QUESTIONS.flatMap((q) => {
+      const r = responses[q.id];
+      if (!r?.answer) return [];
+      const beat = r.secondBeat && r.secondBeat !== "skipped" ? answerWords(r.secondBeat) : "";
+      const text = [answerWords(r.answer), beat].filter(Boolean).join(" ");
+      return text ? [{ id: `a_${q.id}`, questionId: q.id, text, date }] : [];
+    });
+    // The board is built from what's saved, so every answer has to land first.
+    if ((await flush()) && (await assemble(sources))) {
+      router.push("/brain/board");
+      return;
+    }
+    setBuilding(false);
+    setBuildFailed(true);
+  }
 
   const question = QUESTIONS.find((q) => q.id === id) ?? DEEP_DIVE_QUESTIONS[0];
   const index = DEEP_DIVE_QUESTIONS.indexOf(question);
@@ -59,8 +93,30 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
           question={question}
           progress={progress}
           response={response}
-          onChange={(nextResponse) => setResponses((all) => ({ ...all, [question.id]: nextResponse }))}
+          onChange={(nextResponse) => change(question.id, nextResponse)}
         />
+        {building && (
+          <p className="mt-8 text-sm text-secondary">
+            Picking out your stories, opinions and proof, in your words. This takes a minute or two.
+          </p>
+        )}
+        {buildFailed && (
+          <p role="alert" className="mt-8 text-sm">
+            Couldn&apos;t build your board just now. Everything you&apos;ve said is still here, so try again in a moment.
+          </p>
+        )}
+        {failed.has(question.id) && (
+          <p role="alert" className="mt-8 text-sm">
+            Couldn&apos;t save this answer. It&apos;s still here.{" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-ink"
+              onClick={() => retry(question.id)}
+            >
+              Try again
+            </button>
+          </p>
+        )}
         <div className="mt-12 flex items-center gap-5">
           {question.topUp ? (
             response.answer && (
@@ -79,25 +135,8 @@ export function DeepDiveQuestions({ startAt }: { startAt: string }) {
               Next question
             </Button>
           ) : (
-            <Button
-              variant="primary"
-              disabled={!response.answer}
-              onClick={() => {
-                // Every typed answer becomes a source; voice-only answers wait for transcription.
-                const date = new Date().toISOString().slice(0, 10);
-                assemble(
-                  DEEP_DIVE_QUESTIONS.flatMap((q) => {
-                    const r = responses[q.id];
-                    if (!r?.answer) return [];
-                    const beat = r.secondBeat && r.secondBeat !== "skipped" ? r.secondBeat.text : "";
-                    const text = [r.answer.text, beat].filter(Boolean).join(" ");
-                    return text ? [{ id: `a_${q.id}`, questionId: q.id, text, date }] : [];
-                  })
-                );
-                router.push("/brain/board");
-              }}
-            >
-              Build my board
+            <Button variant="primary" disabled={!response.answer || building} onClick={buildBoard}>
+              {building ? "Reading your answers" : "Build my board"}
             </Button>
           )}
           {prev && (

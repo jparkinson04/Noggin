@@ -23,7 +23,8 @@ The founder currently runs this process by hand for paying clients and it works:
 - Components are small and named for what the user sees, not how they're built (`RegionPanel`, not `SidebarDataContainer`).
 - Copy is sentence case, plain verbs, no filler. Buttons say what happens: "Save card", "Record answer", "Mark as approved".
 - Motion: one orchestrated moment per screen, max. The brain's "pulse" on the region that's gone quiet is the only ambient animation in the whole app. Respect `prefers-reduced-motion`.
-- Phase 1 is sample-data only. Don't wire Supabase until `docs/05-roadmap.md` phase 2.
+- Without Supabase keys in `.env.local` the app runs on sample data with no sign-in; with them, sign-in is required and the deep dive saves. Keep both working. See `.env.example`.
+- Database changes go in a new file in `supabase/migrations`, applied with `npm run db:migrate`. Never edit one that has been applied. Mirror the change in `src/db/schema.ts`.
 - Before adding a feature, check it's in the roadmap. If it isn't, add it to the roadmap first and ask.
 
 ## Key files

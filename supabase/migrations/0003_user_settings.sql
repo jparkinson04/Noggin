@@ -47,9 +47,11 @@ create policy "own settings update" on user_settings for update using (user_id =
 create trigger user_settings_touch before update on user_settings for each row execute function touch_updated_at();
 
 -- A row exists from the moment the account does; the app never assumes it, but this keeps reads simple.
-create or replace function create_user_settings() returns trigger language plpgsql security definer as $$
+-- Supabase Auth inserts users with search_path = auth, so the path is pinned and the table named in full;
+-- otherwise this can't find user_settings and every sign-up fails.
+create or replace function create_user_settings() returns trigger language plpgsql security definer set search_path = '' as $$
 begin
-  insert into user_settings (user_id) values (new.id) on conflict do nothing;
+  insert into public.user_settings (user_id) values (new.id) on conflict do nothing;
   return new;
 end $$;
 create trigger on_auth_user_created_settings after insert on auth.users for each row execute function create_user_settings();

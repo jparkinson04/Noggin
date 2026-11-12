@@ -58,7 +58,7 @@ export function AnswerControl({ onVoice, onTyped, typedSoFar = "", small = false
         const blob = new Blob(chunks.current, { type: r.mimeType });
         const seconds = (Date.now() - startedAt.current) / 1000;
         setRecording(false);
-        onVoice({ url: URL.createObjectURL(blob), seconds });
+        onVoice({ url: URL.createObjectURL(blob), seconds, blob });
       };
       startedAt.current = Date.now();
       setElapsed(0);

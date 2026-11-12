@@ -196,7 +196,8 @@ function HomePage() {
       <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-[2.5rem] leading-tight">
-            {now ? greetingFor(now.getHours()) : "Hello"}, {firstName}.
+            {now ? greetingFor(now.getHours()) : "Hello"}
+            {firstName ? `, ${firstName}` : ""}.
           </h1>
           <p className="mt-2 text-secondary">{line}</p>
         </div>

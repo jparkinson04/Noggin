@@ -1,6 +1,7 @@
 /** The settings sections, in order. Plain data so both the server route and the client page can read it. */
 export const SECTIONS = [
   { id: "profile", label: "Profile", title: "Profile" },
+  { id: "appearance", label: "Appearance", title: "Appearance" },
   { id: "voice", label: "Your voice", title: "How Studio writes for you" },
   { id: "sharing", label: "What you're happy to share", title: "What you're happy to share" },
   { id: "linkedin", label: "LinkedIn and publishing", title: "LinkedIn and publishing" },

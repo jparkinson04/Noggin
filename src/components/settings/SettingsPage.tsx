@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useSettings } from "@/components/settings/SettingsProvider";
 import { SECTIONS } from "@/lib/settings/sections";
-import { BillingSection, DataSection, LinkedInSection, NotificationsSection, ProfileSection, SharingSection, VoiceSection } from "@/components/settings/sections";
+import { AppearanceSection, BillingSection, DataSection, LinkedInSection, NotificationsSection, ProfileSection, SharingSection, VoiceSection } from "@/components/settings/sections";
 
 export function SettingsPage({ section }: { section: string }) {
   const { save, error, loaded } = useSettings();
   const body = {
     profile: <ProfileSection />,
+    appearance: <AppearanceSection />,
     voice: <VoiceSection />,
     sharing: <SharingSection />,
     linkedin: <LinkedInSection />,

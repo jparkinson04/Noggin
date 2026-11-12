@@ -4,7 +4,7 @@
 
 **Points of light on a deep surface.** The product is dark: one near-black ground, hairlines instead of boxes, pale ink, and a brain made of warm dots in the middle. The dots are information: a region posted from recently is dense, a region that has gone quiet thins out, and the quietest one shows a faint ghost. The only ambient motion in the whole product is that ghost breathing.
 
-Everything else is deliberately plain so the brain is the thing people remember. No light mode in v1.
+Everything else is deliberately plain so the brain is the thing people remember. Dark is the default; a light theme can be chosen in Settings (see "Light" below).
 
 This is a sibling to Expert Voice, not a child. It shares none of EV's palette (blue #527FE6 / orange #FC9F5B / Fraunces). If you find yourself reaching for warm cream, a serif display and a terracotta accent, or for purple-to-blue gradients and glass on black, stop: both are the standard "AI made this" look and this product must not have it.
 
@@ -26,7 +26,23 @@ Defined in `src/app/globals.css` under `@theme static`. Use the token, never the
 | `muted` | `#5f626a` | the faintest text, disabled states, what a region's index dot fades to |
 | `signal` | `#6b78ff` | the one accent: focus, active, recording, live detection, the capture dot |
 
-There are no light tokens and no `prefers-color-scheme` block. `color-scheme: dark` is set on the page so native controls match.
+`color-scheme: dark` is set on the page so native controls match.
+
+### Light
+
+Chosen in Settings → Appearance and kept in the `theme` cookie, so the server paints the right one first time. Dark stays the default and the device setting is not followed. `html[data-theme="light"]` in `globals.css` redefines the same tokens, so components never check which theme they're in. Nothing new to learn: use the tokens and both work.
+
+| Token | Light |
+|---|---|
+| `ground` | `#f5f5f3`, a cool off-white, never cream |
+| `raised` | `#ebebe8` |
+| `hairline` | `#dcdcd8` |
+| `ink` | `#1a1b1e` |
+| `secondary` | `#5c5f67` |
+| `muted` | `#8b8e95` |
+| `signal` | `#4a57e6` |
+
+The brain map goes light too. Its lobe tints are deepened so the dots still read on pale: whys `#c56e68`, stories `#b38a14`, opinions `#4a76c0`, personality `#8c62bd`, receipts `#4f9450`, engine `#94733c`, headline `#6c707a`.
 
 ### Lobe tints
 

@@ -19,17 +19,19 @@ Done when: you'd happily show it to a client and say "this is your brain".
 
 ## Phase 2 — Real brains (Supabase, auth, voice)
 
-- [ ] Supabase project, run `0001_init.sql`, Drizzle client
-- [ ] Email magic-link auth
-- [ ] Deep dive flow: one question per screen, drip schedule, record / type / upload
-- [ ] Voice recording in the browser (MediaRecorder), upload to Storage
-- [ ] Transcription route (Whisper or Deepgram)
+- [x] Supabase project, migrations applied with `npm run db:migrate`
+- [ ] Drizzle client
+- [x] Email magic-link auth
+- [ ] Deep dive flow: one question per screen, drip schedule, record / type / upload (answers save as they're given and the dive picks up where it left off; the drip schedule and file upload are still to do)
+- [x] Voice recording in the browser (MediaRecorder), upload to Storage
+- [x] Transcription route (OpenAI `gpt-4o-mini-transcribe`; deep-dive voice notes are transcribed as they save)
 - [ ] AI follow-up job (one per question, skippable)
-- [ ] AI extract job → proposed cards, engine diagnosis, headline options
-- [ ] Walkthrough screen: approve / edit / delete cards, confirm engine, mix, cadence, pick headline
+- [ ] AI extract job → proposed cards, engine diagnosis, headline options (cards and headline options are done, with Claude, logged to `ai_calls`; the engine diagnosis is still the rule-based reading in `observe.ts`)
+- [x] Walkthrough screen: approve / edit / delete cards, confirm engine, mix, cadence, pick headline (the Board; every edit, the build and the approval save)
 - [ ] Studio unlock gate on `approved`
 - [ ] AI draft-help actions with constructed-line marking
 - [ ] Brain dumps, photo bank, calendar (simple CRUD)
+- [x] Light theme, chosen in Settings → Appearance (dark stays the default)
 
 Done when: you've migrated one real client's brain board into it and used it for a month.
 
