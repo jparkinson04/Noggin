@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useBrain } from "@/components/brain/BrainStore";
 import { useCapture } from "@/components/capture/CaptureSheet";
+import { Card } from "@/components/shell/Card";
 import { Wordmark } from "@/components/shell/Wordmark";
-import { useEffect, useRef, useState } from "react";
+import { mappedShare } from "@/lib/brain/heat";
 
 /** Small line icons, drawn in the current colour, one per module. */
 const ICONS: Record<string, ReactNode> = {
@@ -41,10 +43,14 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-/** The left rail: wordmark, the four modules with an icon each, capture, and the person. Nothing else. */
+/**
+ * The left column: a stack of cards. Logo, navigation, how mapped the brain is, then
+ * "Tell me something" and the account at the bottom.
+ */
 export function SideNav({ initials }: { initials: string }) {
   const pathname = usePathname();
   const capture = useCapture();
+  const { brain } = useBrain();
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -56,67 +62,102 @@ export function SideNav({ initials }: { initials: string }) {
   // The deep dive and the quiz are blank rooms.
   if (pathname.startsWith("/deep-dive") || pathname.startsWith("/engine")) return null;
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const mapped = Math.round(mappedShare(brain) * 100);
 
   return (
-    <aside className="flex shrink-0 items-center gap-4 border-b border-hairline px-4 py-3 lg:sticky lg:top-0 lg:h-screen lg:w-[220px] lg:flex-col lg:items-stretch lg:gap-0 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
-      <Link href="/" aria-label="Noggin home" className="shrink-0 lg:mb-10 lg:px-2">
-        <Wordmark height={26} />
-      </Link>
-
-      <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Modules">
-        {MODULES.map((m) => {
-          const active = isActive(m.href);
-          return (
-            <Link
-              key={m.href}
-              href={m.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-btn px-2 py-2 text-sm whitespace-nowrap ${
-                active ? "text-ink" : "text-secondary hover:text-ink"
-              }`}
-            >
-              <Icon name={m.icon} />
-              <span className="hidden sm:inline">{m.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="flex shrink-0 items-center gap-3 lg:mt-auto lg:flex-col lg:items-stretch lg:gap-4">
-        <button
-          type="button"
-          aria-label="Tell me something"
-          onClick={capture.open}
-          className="flex items-center justify-center gap-2.5 rounded-full border border-hairline px-3 py-1.5 text-sm whitespace-nowrap hover:border-secondary lg:px-4 lg:py-2"
-        >
-          <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-signal" />
-          <span className="hidden sm:inline">Tell me something</span>
-        </button>
-        <div ref={menuRef} className="relative lg:ml-2">
-          <button
-            type="button"
-            aria-label="Account menu"
-            aria-expanded={menu}
-            onClick={() => setMenu((m) => !m)}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-raised text-xs text-secondary hover:text-ink"
-          >
-            {initials}
-          </button>
-          {menu && (
-            <div className="absolute bottom-full right-0 z-40 mb-2 w-44 rounded-btn border border-hairline bg-ground py-1 lg:bottom-auto lg:left-0 lg:right-auto lg:top-full lg:mt-2 lg:mb-0" role="menu">
-              <Link href="/settings" role="menuitem" className="block px-3 py-2 text-sm text-secondary hover:text-ink" onClick={() => setMenu(false)}>
-                Settings
-              </Link>
-              <Link href="/settings/linkedin" role="menuitem" className="block px-3 py-2 text-sm text-secondary hover:text-ink" onClick={() => setMenu(false)}>
-                LinkedIn
-              </Link>
-              <button type="button" role="menuitem" className="block w-full px-3 py-2 text-left text-sm text-secondary hover:text-ink" onClick={() => setMenu(false)}>
-                Sign out
-              </button>
-            </div>
-          )}
+    <aside className="flex shrink-0 flex-col gap-3 p-3 lg:sticky lg:top-0 lg:h-screen lg:w-[232px] lg:p-4">
+      <Card className="flex items-center justify-between gap-3 lg:justify-start" pad={4}>
+        <Link href="/" aria-label="Noggin home" className="shrink-0">
+          <Wordmark height={24} />
+        </Link>
+        {/* On small screens the account sits in the logo card so the stack stays short. */}
+        <div className="lg:hidden">
+          <Account initials={initials} />
         </div>
-      </div>
+      </Card>
+
+      <Card as="nav" pad={3} className="min-w-0">
+        <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Modules">
+          {MODULES.map((m) => {
+            const active = isActive(m.href);
+            return (
+              <li key={m.href} className="shrink-0">
+                <Link
+                  href={m.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-btn px-3 py-2 text-sm whitespace-nowrap ${
+                    active ? "bg-highlight font-medium text-ink" : "text-secondary hover:bg-ground hover:text-ink"
+                  }`}
+                >
+                  <Icon name={m.icon} />
+                  <span className="hidden sm:inline">{m.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+
+      <Card pad={4} className="hidden lg:block">
+        <div className="flex items-baseline justify-between gap-3 text-sm">
+          <span>Your noggin</span>
+          <span className="font-medium tabular-nums">{mapped}%</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-hairline" role="progressbar" aria-valuenow={mapped} aria-valuemin={0} aria-valuemax={100} aria-label="How mapped your brain is">
+          <div className="h-full rounded-full bg-brand" style={{ width: `${mapped}%` }} />
+        </div>
+        <p className="mt-2 text-xs text-secondary">mapped so far</p>
+      </Card>
+
+      <div className="hidden flex-1 lg:block" />
+
+      <button
+        type="button"
+        onClick={capture.open}
+        className="hidden items-center justify-center gap-2.5 rounded-card bg-ink px-4 py-3 text-sm font-medium text-highlight hover:bg-signal lg:flex"
+      >
+        <span aria-hidden className="h-2 w-2 rounded-full bg-brand" />
+        Tell me something
+      </button>
+
+      <Card pad={3} className="hidden lg:block">
+        <Account initials={initials} withName />
+      </Card>
     </aside>
   );
+
+  function Account({ initials, withName = false }: { initials: string; withName?: boolean }) {
+    return (
+      <div ref={menuRef} className="relative">
+        <button
+          type="button"
+          aria-label="Account menu"
+          aria-expanded={menu}
+          onClick={() => setMenu((m) => !m)}
+          className="flex w-full items-center gap-3 rounded-btn px-1 py-1 text-left hover:bg-ground"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-highlight text-xs font-medium text-ink">{initials}</span>
+          {withName && (
+            <span className="min-w-0">
+              <span className="block truncate text-sm">{brain.ownerName}</span>
+              <span className="block text-xs text-secondary">Account</span>
+            </span>
+          )}
+        </button>
+        {menu && (
+          <div className="absolute bottom-full left-0 z-40 mb-2 w-44 rounded-card border border-hairline bg-card py-1" role="menu">
+            <Link href="/settings" role="menuitem" className="block px-3 py-2 text-sm text-secondary hover:bg-ground hover:text-ink" onClick={() => setMenu(false)}>
+              Settings
+            </Link>
+            <Link href="/settings/linkedin" role="menuitem" className="block px-3 py-2 text-sm text-secondary hover:bg-ground hover:text-ink" onClick={() => setMenu(false)}>
+              LinkedIn
+            </Link>
+            <button type="button" role="menuitem" className="block w-full px-3 py-2 text-left text-sm text-secondary hover:bg-ground hover:text-ink" onClick={() => setMenu(false)}>
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 }

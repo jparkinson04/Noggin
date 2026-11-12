@@ -12,8 +12,8 @@ const SIZE = {
   small: "h-8 px-3 text-xs",
 } as const;
 const STYLE = {
-  primary: "bg-ink text-ground",
-  secondary: "border border-hairline hover:border-secondary",
+  primary: "bg-ink text-highlight hover:bg-signal",
+  secondary: "border border-hairline bg-card hover:border-secondary",
 } as const;
 
 type Variant = keyof typeof STYLE;

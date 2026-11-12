@@ -4,23 +4,26 @@
    `static` because the lobe tints are only read through var() in inline styles,
    and Tailwind drops theme variables that no utility class uses. */
 @theme static {
-  --color-ground: #1a1b1e;
-  --color-raised: #202126;
-  --color-hairline: #2b2c32;
-  --color-ink: #ecebe6;
-  --color-secondary: #8f929a;
-  --color-muted: #5f626a;
-  --color-signal: #6b78ff;
-  /* The wordmark's purple-blue, used for the brain mark only. Not the UI accent. */
-  --color-brand: #4a5bff;
+  /* Light, one colour: the highlighter. See DESIGN.md in the site repo for the rules. */
+  --color-ground: #f7f7ea;
+  --color-card: #fffffa;
+  --color-raised: #fffffa;        /* older name for the card colour, kept so nothing breaks */
+  --color-hairline: #e4e7c4;
+  --color-ink: #1c2105;
+  --color-secondary: #5a6136;
+  --color-muted: #8b9064;
+  --color-brand: #d7f205;         /* fills, the brain, the logo mark. Never text. */
+  --color-highlight: #ecf78a;     /* the marker behind a key word, the active nav item, button text on ink */
+  /* The one accent that may be text or a thin line: a deep tone of the same green. */
+  --color-signal: #5f6b00;
 
-  --color-lobe-whys: #e0a39f;
-  --color-lobe-stories: #e2c266;
-  --color-lobe-opinions: #8fb0e0;
-  --color-lobe-personality: #c7a9e3;
-  --color-lobe-receipts: #9fcf9b;
-  --color-lobe-engine: #c7ab7d;
-  --color-lobe-headline: #9a9ea8;
+  --color-lobe-whys: #f5fbc4;
+  --color-lobe-stories: #ecf78a;
+  --color-lobe-opinions: #e1f548;
+  --color-lobe-personality: #d7f205;
+  --color-lobe-receipts: #6f7d00;
+  --color-lobe-engine: #c9cba9;
+  --color-lobe-headline: #a9ac8b;
 
   --font-display: var(--font-bricolage), "Bricolage Grotesque", system-ui, sans-serif;
   --font-body: var(--font-figtree), "Figtree", system-ui, sans-serif;
@@ -28,6 +31,7 @@
   --radius-sm: 4px;
   --radius-btn: 8px;
   --radius-md: 10px;
+  --radius-card: 12px;
   --radius-lg: 16px;
 
   --text-xs: 0.8125rem;
@@ -45,7 +49,7 @@
 /* Body text is 17px, but rem stays 16px so spacing tokens mean what they say. */
 html {
   background: var(--color-ground);
-  color-scheme: dark;
+  color-scheme: light;
 }
 body {
   color: var(--color-ink);

@@ -1,72 +1,53 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { BrainMap } from "@/components/brain/BrainMap";
+import { useMemo, useState } from "react";
+import { BrainSections } from "@/components/brain/BrainSections";
 import { BrainTabs } from "@/components/brain/BrainTabs";
 import { useBrain } from "@/components/brain/BrainStore";
 import { RegionColumn } from "@/components/brain/RegionColumn";
+import { Card } from "@/components/shell/Card";
 import { StageColumn } from "@/components/shell/StageColumn";
-import { cardCounts, laneUsage, mappedShare, regionHeat } from "@/lib/brain/heat";
+import { laneUsage, mappedShare, regionFill, regionHeat } from "@/lib/brain/heat";
 import type { RegionKey } from "@/lib/brain/schema";
 
 export default function BrainHome() {
-  const { brain, flyIns, consumeFlyIns } = useBrain();
-  // A capture since the last visit lands as a dot, once.
-  const [landing, setLanding] = useState(0);
-  useEffect(() => {
-    if (!flyIns) return;
-    setLanding(flyIns);
-    consumeFlyIns();
-    const t = setTimeout(() => setLanding(0), 1000);
-    return () => clearTimeout(t);
-  }, [flyIns, consumeFlyIns]);
+  const { brain } = useBrain();
   const [selected, setSelected] = useState<RegionKey>("whys");
   const [hovered, setHovered] = useState<RegionKey | null>(null);
 
   const usage = useMemo(() => laneUsage(brain), [brain]);
   const heat = useMemo(() => regionHeat(brain, usage), [brain, usage]);
+  const filled = useMemo(() => regionFill(brain), [brain]);
   const mapped = Math.round(mappedShare(brain) * 100);
-  // One anchor dot per card on the board; the cloud grows with the count.
-  const anchors = useMemo(() => cardCounts(brain), [brain]);
-
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
   return (
     <StageColumn
       stage={
-        <div className="relative mx-auto max-w-[1040px]">
+        <>
           <BrainTabs />
-          <div className="mt-4" />
-          {landing > 0 && (
-            <span
-              aria-hidden
-              className="fly-in pointer-events-none absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full bg-signal"
+          <Card pad={6} className="flex items-center justify-center">
+            <BrainSections
+              filled={filled}
+              selected={hovered ?? selected}
+              onSelect={setSelected}
+              onHover={setHovered}
+              className="w-full max-w-[720px]"
             />
-          )}
-          <BrainMap
-            heat={heat}
-            selected={selected}
-            onSelect={setSelected}
-            onHover={setHovered}
-            anchors={anchors}
-          />
-          <p className="mt-4 text-center text-sm text-secondary">
-            {cap(brain.enginePrimary)}
-            {brain.engineSecondary ? `, ${brain.engineSecondary} second` : ""} · {brain.cadencePerWeek} a week ·{" "}
-            {mapped}% mapped
-          </p>
-          <p className="display mx-auto mt-3 max-w-[60ch] text-center text-lg">{brain.headline}</p>
-        </div>
+          </Card>
+          <Card pad={5}>
+            <p className="text-sm text-secondary">
+              {cap(brain.enginePrimary)}
+              {brain.engineSecondary ? `, ${brain.engineSecondary} second` : ""} · {brain.cadencePerWeek} a week ·{" "}
+              {mapped}% mapped
+            </p>
+            <p className="display mt-2 max-w-[60ch] text-lg leading-snug">{brain.headline}</p>
+          </Card>
+        </>
       }
       column={
         // While the cursor is over a region the column shows that one; a click keeps it.
-        <RegionColumn
-          brain={brain}
-          region={hovered ?? selected}
-          usage={usage}
-          heat={heat}
-          onPick={setSelected}
-        />
+        <RegionColumn brain={brain} region={hovered ?? selected} usage={usage} heat={heat} onPick={setSelected} />
       }
     />
   );

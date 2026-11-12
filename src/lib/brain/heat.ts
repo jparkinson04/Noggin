@@ -172,3 +172,11 @@ export function thisWeek(brain: Brain, usage: LaneUsage[], now = new Date()): Re
 
 /** Which weekdays someone on this cadence posts. See src/lib/plan/week.ts. */
 export { defaultPostingDays as postingDays } from "../plan/week";
+
+/** How mapped each region is, 0..1: cards on the board against a full region of six. */
+export function regionFill(brain: Brain): Record<RegionKey, number> {
+  const counts = cardCounts(brain);
+  return Object.fromEntries(
+    (Object.keys(counts) as RegionKey[]).map((key) => [key, Math.min(1, counts[key] / 6)])
+  ) as Record<RegionKey, number>;
+}
