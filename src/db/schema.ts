@@ -21,6 +21,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { Engine, QuizResult } from "@/lib/brain/schema";
+import type { AudiencePerson, AudienceTip } from "@/lib/audience/types";
 
 export const regionKey = pgEnum("region_key", [
   "whys", "stories", "opinions", "personality", "receipts", "engine", "headline",
@@ -56,6 +57,9 @@ export const brains = pgTable("brains", {
   jobTitle: text("job_title"),
   company: text("company"),
   avatarUrl: text("avatar_url"),
+  /** Who they want to reach and what they want from them. Audience audits are read against these. */
+  idealClient: text("ideal_client"),
+  audienceGoal: text("audience_goal"),
   headline: text("headline"),
   headlineOptions: jsonb("headline_options").$type<string[]>().default([]),
   /** The engine quiz's result, whole. */
@@ -185,11 +189,25 @@ export const analyticsSnapshots = pgTable("analytics_snapshots", {
   source: text("source").default("manual").notNull(),
 });
 
+/** Who reacted to their recent posts, sorted against the ideal client. Screenshots are never stored. */
+export const audienceAudits = pgTable("audience_audits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  brainId: uuid("brain_id").references(() => brains.id, { onDelete: "cascade" }).notNull(),
+  idealClient: text("ideal_client").notNull(),
+  audienceGoal: text("audience_goal"),
+  people: jsonb("people").$type<AudiencePerson[]>().default([]).notNull(),
+  summary: text("summary").default("").notNull(),
+  tips: jsonb("tips").$type<AudienceTip[]>().default([]).notNull(),
+  screenshots: integer("screenshots").default(0).notNull(),
+  model: text("model"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 /** Every AI call, for finding out which prompts need work. See docs/04-ai-rules.md. */
 export const aiCalls = pgTable("ai_calls", {
   id: uuid("id").primaryKey().defaultRandom(),
   brainId: uuid("brain_id").references(() => brains.id, { onDelete: "cascade" }).notNull(),
-  job: text("job").notNull(), // extract | follow_up | draft_help
+  job: text("job").notNull(), // extract | follow_up | draft_help | audience_audit
   model: text("model").notNull(),
   inputIds: jsonb("input_ids").$type<string[]>().default([]).notNull(),
   outputIds: jsonb("output_ids").$type<string[]>().default([]).notNull(),

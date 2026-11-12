@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function logAiCall(entry: {
   brainId: string;
-  job: "extract" | "follow_up" | "draft_help";
+  job: "extract" | "follow_up" | "draft_help" | "audience_audit";
   model: string;
   inputIds: string[];
   outputIds: string[];
